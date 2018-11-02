@@ -254,18 +254,18 @@ void set_leds() {
     alt_write_word(fpga_leds, 0x0002);
 }
 
-
 typedef struct {
-	uint32_t* RXBaseAddress[6];
+	char* RXBaseAddress[6];
+	char* RXTopAddress[6];
 	uint32_t RXFrameSize[6];
-	uint32_t* RXNextFrameAddress[6];
-} UART_info;
+	char* RXNextFrameAddress[6];
+} UART_RXinfo;
 
 void* RXTransferFrameAddress[6];
 
 
 int main() {
-	int i,j;
+	int i;
     printf("DE0-Nano-SoC Sniffer HPS-side\n");
 
     open_physical_memory_device();
@@ -274,7 +274,7 @@ int main() {
     setup_hps_gpio();
     setup_fpga_leds();
 
-    UART_info* info = RAMDest_UART_Info;
+    UART_RXinfo* info = RAMDest_UART_Info;
 
     // Initially, point to wherever the RX buffer FPGA pointer is
     // (i.e. disregard frames thay may have arrived in the buffer before this program is executed)
@@ -302,35 +302,7 @@ int main() {
         			printf("UART%d: RXTransferFrameAddress=0x%p\n", i, RXTransferFrameAddress[i]);
         		}
         	}
-
 		}
-
-
-/*
-		for (i=0;i<6;i++)
-		{
-			printf("UART%d: BaseAddress=0x%p\n", i, info->RXBaseAddress[i]);
-			printf("UART%d: FrameSize=%d\n", i, info->RXFrameSize[i]);
-			printf("UART%d: NextFrameAddress=0x%p\n", i, info->RXNextFrameAddress[i]);
-		}
-
-    	uint32_t * addr;
-
-    	for (j=0;j<16;j++)
-    	{
-    		addr = (uint32_t*)(RAMDest_UART0_RX + j*4096);
-
-			printf("UART0_RX[%d] = ", j);
-			for (i=0;i<8;i++)
-			{
-				printf("%08X ", *addr);
-				addr++;
-			}
-			printf("\n");
-    	}
-		printf("\n");
-*/
-
     }
 
     munmap_peripherals();

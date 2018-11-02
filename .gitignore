@@ -3,6 +3,7 @@
 *.elf
 *.objdump
 *.map
+*.log
 Debug/
 obj/
 /DE0_Nano_SoC_Sniffer/hw/quartus/c5_pin_model_dump.txt

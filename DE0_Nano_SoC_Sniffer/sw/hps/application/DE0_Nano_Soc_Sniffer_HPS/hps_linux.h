@@ -81,15 +81,8 @@ void *fpga_leds = NULL;
 
 #define RAMDEST_UART_INFO       0x38000000
 
-void* RAMDest_UART0_RX;
-void* RAMDest_UART1_RX;
-void* RAMDest_UART2_RX;
-void* RAMDest_UART3_RX;
-void* RAMDest_UART4_RX;
-void* RAMDest_UART5_RX;
-
+void* RAMDest_UART_RX[6];
 void* RAMDest_UART_Info;
-
 
 
 void open_physical_memory_device();

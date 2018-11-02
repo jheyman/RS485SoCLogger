@@ -8,6 +8,16 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+
+#include <stdio.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <strings.h>
+#include <fcntl.h>
+
+
 #include "alt_generalpurpose_io.h"
 #include "hwlib.h"
 #include "socal/alt_gpio.h"
@@ -53,48 +63,48 @@ void munmap_hps_peripherals() {
 }
 
 void mmap_hps_RAMs() {
-	RAMDest_UART0_RX = mmap(NULL, RAMDEST_UART0_RX_END - RAMDEST_UART0_RX_START + 1, PROT_READ | PROT_WRITE, MAP_SHARED, fd_dev_mem, RAMDEST_UART0_RX_START);
-    if (RAMDest_UART0_RX == MAP_FAILED) {
+	RAMDest_UART_RX[0] = mmap(NULL, RAMDEST_UART0_RX_END - RAMDEST_UART0_RX_START + 1, PROT_READ | PROT_WRITE, MAP_SHARED, fd_dev_mem, RAMDEST_UART0_RX_START);
+    if (RAMDest_UART_RX[0] == MAP_FAILED) {
         printf("Error: RAMDest_UART0 mmap() failed.\n");
         printf("    errno = %s\n", strerror(errno));
         close(fd_dev_mem);
         exit(EXIT_FAILURE);
     }
 
-	RAMDest_UART1_RX = mmap(NULL, RAMDEST_UART1_RX_END-RAMDEST_UART1_RX_START+1, PROT_READ | PROT_WRITE, MAP_SHARED, fd_dev_mem, RAMDEST_UART1_RX_START);
-    if (RAMDest_UART1_RX == MAP_FAILED) {
+	RAMDest_UART_RX[1] = mmap(NULL, RAMDEST_UART1_RX_END-RAMDEST_UART1_RX_START+1, PROT_READ | PROT_WRITE, MAP_SHARED, fd_dev_mem, RAMDEST_UART1_RX_START);
+    if (RAMDest_UART_RX[1] == MAP_FAILED) {
         printf("Error: RAMDest_UART1 mmap() failed.\n");
         printf("    errno = %s\n", strerror(errno));
         close(fd_dev_mem);
         exit(EXIT_FAILURE);
     }
 
-	RAMDest_UART2_RX = mmap(NULL, RAMDEST_UART2_RX_END-RAMDEST_UART2_RX_START+1, PROT_READ | PROT_WRITE, MAP_SHARED, fd_dev_mem, RAMDEST_UART2_RX_START);
-    if (RAMDest_UART2_RX == MAP_FAILED) {
+    RAMDest_UART_RX[2] = mmap(NULL, RAMDEST_UART2_RX_END-RAMDEST_UART2_RX_START+1, PROT_READ | PROT_WRITE, MAP_SHARED, fd_dev_mem, RAMDEST_UART2_RX_START);
+    if (RAMDest_UART_RX[2] == MAP_FAILED) {
         printf("Error: RAMDest_UART2 mmap() failed.\n");
         printf("    errno = %s\n", strerror(errno));
         close(fd_dev_mem);
         exit(EXIT_FAILURE);
     }
 
-	RAMDest_UART3_RX = mmap(NULL, RAMDEST_UART3_RX_END-RAMDEST_UART3_RX_START+1, PROT_READ | PROT_WRITE, MAP_SHARED, fd_dev_mem, RAMDEST_UART3_RX_START);
-    if (RAMDest_UART3_RX == MAP_FAILED) {
+    RAMDest_UART_RX[3] = mmap(NULL, RAMDEST_UART3_RX_END-RAMDEST_UART3_RX_START+1, PROT_READ | PROT_WRITE, MAP_SHARED, fd_dev_mem, RAMDEST_UART3_RX_START);
+    if (RAMDest_UART_RX[3] == MAP_FAILED) {
         printf("Error: RAMDest_UART3 mmap() failed.\n");
         printf("    errno = %s\n", strerror(errno));
         close(fd_dev_mem);
         exit(EXIT_FAILURE);
     }
 
-	RAMDest_UART4_RX = mmap(NULL, RAMDEST_UART4_RX_END-RAMDEST_UART4_RX_START+1, PROT_READ | PROT_WRITE, MAP_SHARED, fd_dev_mem, RAMDEST_UART4_RX_START);
-    if (RAMDest_UART4_RX == MAP_FAILED) {
+    RAMDest_UART_RX[4] = mmap(NULL, RAMDEST_UART4_RX_END-RAMDEST_UART4_RX_START+1, PROT_READ | PROT_WRITE, MAP_SHARED, fd_dev_mem, RAMDEST_UART4_RX_START);
+    if (RAMDest_UART_RX[4] == MAP_FAILED) {
         printf("Error: RAMDest_UART4 mmap() failed.\n");
         printf("    errno = %s\n", strerror(errno));
         close(fd_dev_mem);
         exit(EXIT_FAILURE);
     }
 
-	RAMDest_UART5_RX = mmap(NULL, RAMDEST_UART5_RX_END-RAMDEST_UART5_RX_START+1, PROT_READ | PROT_WRITE, MAP_SHARED, fd_dev_mem, RAMDEST_UART5_RX_START);
-    if (RAMDest_UART5_RX == MAP_FAILED) {
+    RAMDest_UART_RX[5] = mmap(NULL, RAMDEST_UART5_RX_END-RAMDEST_UART5_RX_START+1, PROT_READ | PROT_WRITE, MAP_SHARED, fd_dev_mem, RAMDEST_UART5_RX_START);
+    if (RAMDest_UART_RX[5] == MAP_FAILED) {
         printf("Error: RAMDest_UART5 mmap() failed.\n");
         printf("    errno = %s\n", strerror(errno));
         close(fd_dev_mem);
@@ -111,42 +121,42 @@ void mmap_hps_RAMs() {
 }
 
 void munmap_hps_RAMs() {
-    if (munmap(RAMDest_UART0_RX, RAMDEST_UART0_RX_END - RAMDEST_UART0_RX_START + 1) != 0) {
+    if (munmap(RAMDest_UART_RX[0], RAMDEST_UART0_RX_END - RAMDEST_UART0_RX_START + 1) != 0) {
         printf("Error: RAMDest_UART0 munmap() failed\n");
         printf("    errno = %s\n", strerror(errno));
         close(fd_dev_mem);
         exit(EXIT_FAILURE);
     }
 
-    if (munmap(RAMDest_UART1_RX, RAMDEST_UART1_RX_END-RAMDEST_UART1_RX_START+1) != 0) {
+    if (munmap(RAMDest_UART_RX[1], RAMDEST_UART1_RX_END-RAMDEST_UART1_RX_START+1) != 0) {
         printf("Error: RAMDest_UART1 munmap() failed\n");
         printf("    errno = %s\n", strerror(errno));
         close(fd_dev_mem);
         exit(EXIT_FAILURE);
     }
 
-    if (munmap(RAMDest_UART2_RX, RAMDEST_UART2_RX_END-RAMDEST_UART2_RX_START+1) != 0) {
+    if (munmap(RAMDest_UART_RX[2], RAMDEST_UART2_RX_END-RAMDEST_UART2_RX_START+1) != 0) {
         printf("Error: RAMDest_UART2 munmap() failed\n");
         printf("    errno = %s\n", strerror(errno));
         close(fd_dev_mem);
         exit(EXIT_FAILURE);
     }
 
-    if (munmap(RAMDest_UART3_RX, RAMDEST_UART3_RX_END-RAMDEST_UART3_RX_START+1) != 0) {
+    if (munmap(RAMDest_UART_RX[3], RAMDEST_UART3_RX_END-RAMDEST_UART3_RX_START+1) != 0) {
         printf("Error: RAMDest_UART3 munmap() failed\n");
         printf("    errno = %s\n", strerror(errno));
         close(fd_dev_mem);
         exit(EXIT_FAILURE);
     }
 
-    if (munmap(RAMDest_UART4_RX, RAMDEST_UART4_RX_END-RAMDEST_UART4_RX_START+1) != 0) {
+    if (munmap(RAMDest_UART_RX[4], RAMDEST_UART4_RX_END-RAMDEST_UART4_RX_START+1) != 0) {
         printf("Error: RAMDest_UART4 munmap() failed\n");
         printf("    errno = %s\n", strerror(errno));
         close(fd_dev_mem);
         exit(EXIT_FAILURE);
     }
 
-    if (munmap(RAMDest_UART5_RX, RAMDEST_UART5_RX_END-RAMDEST_UART5_RX_START+1) != 0) {
+    if (munmap(RAMDest_UART_RX[5], RAMDEST_UART5_RX_END-RAMDEST_UART5_RX_START+1) != 0) {
         printf("Error: RAMDest_UART5 munmap() failed\n");
         printf("    errno = %s\n", strerror(errno));
         close(fd_dev_mem);
@@ -160,16 +170,15 @@ void munmap_hps_RAMs() {
         exit(EXIT_FAILURE);
     }
 
-    RAMDest_UART0_RX = NULL;
-    RAMDest_UART1_RX = NULL;
-    RAMDest_UART2_RX = NULL;
-    RAMDest_UART3_RX = NULL;
-    RAMDest_UART4_RX = NULL;
-    RAMDest_UART5_RX = NULL;
+    RAMDest_UART_RX[0] = NULL;
+    RAMDest_UART_RX[1] = NULL;
+    RAMDest_UART_RX[2] = NULL;
+    RAMDest_UART_RX[3] = NULL;
+    RAMDest_UART_RX[4] = NULL;
+    RAMDest_UART_RX[5] = NULL;
 
     RAMDest_UART_Info = NULL;
 }
-
 
 void mmap_fpga_peripherals() {
 
@@ -261,11 +270,12 @@ typedef struct {
 	char* RXNextFrameAddress[6];
 } UART_RXinfo;
 
-void* RXTransferFrameAddress[6];
-
+unsigned int RXLatestTransferedFrameOffset[6];
+unsigned int RXLatestReceivedFrameOffset[6];
+unsigned int MaxFrameOffset[6];
 
 int main() {
-	int i;
+	unsigned int i,k;
     printf("DE0-Nano-SoC Sniffer HPS-side\n");
 
     open_physical_memory_device();
@@ -277,29 +287,94 @@ int main() {
     UART_RXinfo* info = RAMDest_UART_Info;
 
     // Initially, point to wherever the RX buffer FPGA pointer is
-    // (i.e. disregard frames thay may have arrived in the buffer before this program is executed)
+    // (i.e. disregard frames that may have arrived in the buffer before this program is executed)
 	for (i=0;i<6;i++)
 	{
-		RXTransferFrameAddress[i] = info->RXNextFrameAddress[i];
+		MaxFrameOffset[i] = info->RXTopAddress[i] - info->RXBaseAddress[i];
+
+		if (info->RXNextFrameAddress[i] == info->RXBaseAddress[i])
+			RXLatestTransferedFrameOffset[i] = info->RXTopAddress[i] - info->RXFrameSize[i]- info->RXBaseAddress[i];
+       	else
+       		RXLatestTransferedFrameOffset[i] = info->RXNextFrameAddress[i] - info->RXFrameSize[i]- info->RXBaseAddress[i];
+
+		printf("UART%d: initial RXTransferFrameOffset=%d\n", i, RXLatestTransferedFrameOffset[i]);
 	}
 
+	// UDP socket initialization
+	struct sockaddr_in servaddr;
+    int fd = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
+    if(fd<0){
+        perror("cannot open socket");
+    }
+
+    bzero(&servaddr,sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = inet_addr("192.168.0.11");
+    servaddr.sin_port = htons(8888);
+
+    unsigned long ethMsgIndex = 0;
+
+    // Main scanning loop
     while (true) {
+
     	toggle_fpga_leds();
-        usleep(5*ALT_MICROSECS_IN_A_SEC);
+
+    	usleep(5*ALT_MICROSECS_IN_A_SEC);
 
         for (i=0;i<6;i++)
 		{
-        	if (RXTransferFrameAddress[i] != info->RXNextFrameAddress[i])
+        	// handle buffer rollover: if next frame is at base address, then the latest received frame must have been in the last position
+        	// at the top of the buffer
+        	if (info->RXNextFrameAddress[i] == info->RXBaseAddress[i])
+        		RXLatestReceivedFrameOffset[i] = info->RXTopAddress[i] - info->RXFrameSize[i]- info->RXBaseAddress[i];
+        	// else, just look one frame size lower than the nextFrame address
+        	else
+        		RXLatestReceivedFrameOffset[i] = info->RXNextFrameAddress[i] - info->RXFrameSize[i]- info->RXBaseAddress[i];
+
+        	// Then catch-up by transferring all pending messages
+        	if (RXLatestReceivedFrameOffset[i] != RXLatestTransferedFrameOffset[i])
         	{
-        		printf("Got frames on channel %d\n", i);
+        		int nb_Frames_received = RXLatestTransferedFrameOffset[i] < RXLatestReceivedFrameOffset[i] ?
+        				(RXLatestReceivedFrameOffset[i] - RXLatestTransferedFrameOffset[i])/ info->RXFrameSize[i]:
+						(MaxFrameOffset[i] - RXLatestTransferedFrameOffset[i])/ info->RXFrameSize[i] + RXLatestReceivedFrameOffset[i]/info->RXFrameSize[i];
+
+        		printf("Got %d frames on channel %d\n", nb_Frames_received, i);
+
         		// Flush all pending messages
-        		while( RXTransferFrameAddress[i] != info->RXNextFrameAddress[i])
+        		while( RXLatestReceivedFrameOffset[i] != RXLatestTransferedFrameOffset[i])
         		{
-            		// TODO: push frame to Ethernet
+        			// Figure out logical address
+        			char* frameAddr = RAMDest_UART_RX[i] + RXLatestReceivedFrameOffset[i];
+
+        	    	uint32_t * addr;
+        	    	addr = (uint32_t*)frameAddr;
+        	    	for (k=0;k<8;k++)
+        	    	{
+        	    		printf("%08X ", *addr);
+        	    		addr++;
+        	    	}
+        	    	printf("\n");
+
+
+        			char bufToSend[1500];
+
+        			sprintf(bufToSend, "%015lu:", (unsigned long)123456789);
+       			    sprintf(bufToSend+16, "%04lu:", ethMsgIndex);
+       			    sprintf(bufToSend+21, "%02u:", i);
+       			    memcpy(bufToSend+24, frameAddr, 1024);
+
+            		// Push frame to Ethernet
+        		    if (sendto(fd, bufToSend, 16+5+3+1024, 0, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0){
+        		        perror("cannot send message");
+        		    }
+
         			printf("pushed one frame from channel %d\n", i);
 
-        			RXTransferFrameAddress[i] += info->RXFrameSize[i];
-        			printf("UART%d: RXTransferFrameAddress=0x%p\n", i, RXTransferFrameAddress[i]);
+        			ethMsgIndex++ ;
+        		    if (ethMsgIndex > 999) ethMsgIndex = 0;
+
+        		    RXLatestTransferedFrameOffset[i] += info->RXFrameSize[i];
+        			printf("UART%d: RXTransferFrameOffset=%d\n", i, RXLatestTransferedFrameOffset[i]);
         		}
         	}
 		}
@@ -307,6 +382,7 @@ int main() {
 
     munmap_peripherals();
     close_physical_memory_device();
+    close(fd);
 
     return 0;
 }

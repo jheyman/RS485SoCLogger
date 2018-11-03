@@ -436,7 +436,7 @@
  <parameter name="hideFromIPCatalog" value="false" />
  <parameter name="lockedInterfaceDefinition" value="" />
  <parameter name="maxAdditionalLatency" value="1" />
- <parameter name="projectName">DE0_Nano_SoC_demo.qpf</parameter>
+ <parameter name="projectName">DE0_Nano_SoC_Sniffer.qpf</parameter>
  <parameter name="sopcBorderPoints" value="false" />
  <parameter name="systemHash" value="0" />
  <parameter name="testBenchDutName" value="" />
@@ -1725,7 +1725,7 @@
   <parameter name="enPRInitMode" value="false" />
   <parameter name="enableDiffWidth" value="false" />
   <parameter name="initMemContent" value="true" />
-  <parameter name="initializationFileName">/home/etabli/DE0_Soc_Sniffer/DE0_Nano_SoC_demo/sw/nios/application/DE0_Nano_SoC_demo_nios/mem_init/soc_system_onchip_memory2_0.hex</parameter>
+  <parameter name="initializationFileName">mem_init/soc_system_onchip_memory2_0.hex</parameter>
   <parameter name="instanceID" value="NONE" />
   <parameter name="memorySize" value="229376" />
   <parameter name="readDuringWriteMode" value="DONT_CARE" />

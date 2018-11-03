@@ -22,6 +22,18 @@ LOG_FILENAME = parser.get('config', 'log_filename')
 #SERVER_IP = parser.get('config', 'server_ip')
 LISTEN_PORT = parser.getint('config', 'listen_port')
 
+CHANNELS_LIST = parser.get('config', 'channels')
+
+channels = [ chunk.strip() for chunk in CHANNELS_LIST.split(",") ]
+
+print channels
+
+
+ 
+
+
+
+
 REF_DATA_HEX = parser.get('config', 'reference_data_hex')
 ExpectedData=[]
 if (REF_DATA_HEX!=""):

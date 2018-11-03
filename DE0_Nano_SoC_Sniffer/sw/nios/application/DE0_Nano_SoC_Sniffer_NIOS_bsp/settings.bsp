@@ -2,8 +2,8 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>Nov 2, 2018 9:24:43 AM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1541147083197</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>Nov 3, 2018 7:10:39 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1541268639848</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>/home/etabli/DE0_Nano_SoC_Sniffer/sw/nios/application/DE0_Nano_SoC_Sniffer_NIOS_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>/home/etabli/DE0_Nano_SoC_Sniffer/hw/quartus/soc_system.sopcinfo</SopcDesignFile>
@@ -74,7 +74,7 @@
                 <SettingName>hal.linker.enable_alt_load</SettingName>
                 <Identifier>none</Identifier>
                 <Type>Boolean</Type>
-                <Value>1</Value>
+                <Value>0</Value>
                 <DefaultValue>0</DefaultValue>
                 <DestinationFile>none</DestinationFile>
                 <Description>Enables the alt_load() facility. The alt_load() facility copies data sections (.rodata, .rwdata, or .exceptions) from boot memory to RAM. If true, this setting sets up the VMA/LMA of sections in linker.x to allow them to be loaded into the .text memory.</Description>
@@ -914,7 +914,7 @@
                 <SettingName>altera_avalon_jtag_uart_driver.enable_jtag_uart_ignore_fifo_full_error</SettingName>
                 <Identifier>ALTERA_AVALON_JTAG_UART_IGNORE_FIFO_FULL_ERROR</Identifier>
                 <Type>BooleanDefineOnly</Type>
-                <Value>false</Value>
+                <Value>true</Value>
                 <DefaultValue>false</DefaultValue>
                 <DestinationFile>public_mk_define</DestinationFile>
                 <Description>Enable JTAG UART driver to recover when host is inactive causing buffer to full without returning error. Printf will not fail with this recovery.</Description>

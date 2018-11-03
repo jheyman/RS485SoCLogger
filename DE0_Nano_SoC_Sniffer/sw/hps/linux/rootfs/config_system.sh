@@ -71,6 +71,12 @@ addgroup ${username} sudo
 # Set root password to same as previously-created user.
 echo -e "${password}\n${password}\n" | passwd root
 
+# auto-mount sdcard partition for easy remote copy
+mkdir /mnt/sdcard
+tee "/etc/fstab" > "/dev/null" <<EOF
+/dev/mmcblk0p1 /mnt/sdcard vfat defaults 0 0
+EOF
+
 # Remove "/rootfs_config.sh" from /etc/rc.local to avoid reconfiguring system on
 # next boot
 tee "/etc/rc.local" > "/dev/null" <<EOF

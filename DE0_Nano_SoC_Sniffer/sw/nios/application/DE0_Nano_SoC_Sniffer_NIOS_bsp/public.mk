@@ -157,13 +157,13 @@ SOPC_SYSID_FLAG += --sidp=0x41260
 ELF_PATCH_FLAG  += --sidp 0x41260
 
 # The SOPC Timestamp 
-# setting SOPC_TIMESTAMP is 1541104560
-SOPC_SYSID_FLAG += --timestamp=1541104560
-ELF_PATCH_FLAG  += --timestamp 1541104560
+# setting SOPC_TIMESTAMP is 1541234749
+SOPC_SYSID_FLAG += --timestamp=1541234749
+ELF_PATCH_FLAG  += --timestamp 1541234749
 
 # Enable JTAG UART driver to recover when host is inactive causing buffer to 
 # full without returning error. Printf will not fail with this recovery. none 
-# setting altera_avalon_jtag_uart_driver.enable_jtag_uart_ignore_fifo_full_error is false
+# setting altera_avalon_jtag_uart_driver.enable_jtag_uart_ignore_fifo_full_error is true
 
 # Small-footprint (polled mode) driver none 
 # setting altera_avalon_jtag_uart_driver.enable_small_driver is false
@@ -378,6 +378,12 @@ ALT_INCLUDE_DIRS += $(ALT_LIBRARY_ROOT_DIR)/HAL/inc
 #------------------------------------------------------------------------------
 
 ALT_CPPFLAGS += -DALT_SINGLE_THREADED
+
+#------------------------------------------------------------------------------
+#        SOFTWARE COMPONENT & DRIVER SETTING-PRODUCED DEFINITIONS
+#------------------------------------------------------------------------------
+
+ALT_CPPFLAGS += -DALTERA_AVALON_JTAG_UART_IGNORE_FIFO_FULL_ERROR
 
 #END MANAGED
 

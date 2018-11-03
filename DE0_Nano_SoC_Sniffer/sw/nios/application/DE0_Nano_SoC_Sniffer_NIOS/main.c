@@ -171,6 +171,24 @@ int main() {
     UART_RXinfo.RXFrameSize[5] = 4096;
     UART_RXinfo.RXNextFrameAddress[5] = RAMDEST_UART5_RX_START;
 
+    // Just a little LED animation to indicate that NIOS processor is alive and running
+    for(int k=0;k<5;k++)
+    {
+    	for (int i=0; i<6;i++)
+    	{
+    		enable_led(i, true);
+    		usleep(25000);
+    		enable_led(i, false);
+    	}
+
+    	for (int i=4; i>=0;i--)
+    	{
+    		enable_led(i, true);
+    		usleep(25000);
+    		enable_led(i, false);
+    	}
+    }
+
     while (true) {
 
     	msg_received = false;

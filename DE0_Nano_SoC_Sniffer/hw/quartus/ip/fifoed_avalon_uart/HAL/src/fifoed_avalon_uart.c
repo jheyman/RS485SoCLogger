@@ -29,6 +29,7 @@
 ******************************************************************************/
 
 #include <fcntl.h>
+#include <sys/alt_timestamp.h>
 
 #include "sys/alt_dev.h"
 #include "sys/alt_irq.h"
@@ -96,29 +97,29 @@ int fifoed_avalon_uart_read (fifoed_avalon_uart_state* sp, char* ptr, int len, i
     // actually with the new settings you can read up to length. but we will only read until the fifo is empty
     // if that is not what you what then rewrite this function. 
 
-		
+    
       if (status & FIFOED_AVALON_UART_CONTROL_RRDY_MSK)
       {
         ptr[i] = IORD_FIFOED_AVALON_UART_RXDATA(sp->base);
   
- //	not sure what to really do here
+ // not sure what to really do here
  //       if (!(status & (FIFOED_AVALON_UART_STATUS_PE_MSK | 
  //       FIFOED_AVALON_UART_STATUS_FE_MSK)))
  //       {
  //         return 1;
-	    i++; // get the next char if needed
-	    if( i== len)
-		return i;
-	    
+      i++; // get the next char if needed
+      if( i== len)
+    return i;
+      
 //        }
       }
       else  // no chars are ready
       {
 #if 0  //9.3.1 patch
-	if( i>0)  // we have gotten something return it
-	{
-		return i;
-	}
+  if( i>0)  // we have gotten something return it
+  {
+    return i;
+  }
  
     }
   }
@@ -129,13 +130,13 @@ int fifoed_avalon_uart_read (fifoed_avalon_uart_state* sp, char* ptr, int len, i
   return 0;
 }
 #else
-		if( i>0)  // we have gotten something return it
-		{
-			return i;
-		} else if (!block) {
-			ALT_ERRNO = EWOULDBLOCK;
-			return 0;
-		}
+    if( i>0)  // we have gotten something return it
+    {
+      return i;
+    } else if (!block) {
+      ALT_ERRNO = EWOULDBLOCK;
+      return 0;
+    }
  
       }
   }
@@ -230,6 +231,10 @@ int fifoed_avalon_uart_read (fifoed_avalon_uart_state* sp, char* ptr, int len, i
  // alt_u32         next; //9.3.1 patch
 
   int count                = 0;
+
+  // Compute pointer to store timestamp after data buffer.
+  // Obviously, assumes that 4 extra bytes have been allocated for this there...
+  char *timestamp_address = ptr+len;
 
   /* 
    * Construct a flag to indicate whether the device is being accessed in
@@ -339,8 +344,11 @@ int fifoed_avalon_uart_read (fifoed_avalon_uart_state* sp, char* ptr, int len, i
   IOWR_FIFOED_AVALON_UART_CONTROL(sp->base, sp->ctrl);
   alt_irq_enable_all (context);
 
-  /* Return the number of bytes read */
+  // Append the end of frame timestamp after the data buffer
+  // Obviously, assumes that 4 extra bytes have been allocated for this
+  *(alt_u32*)timestamp_address = sp->rx_timestamp;
 
+  /* Return the number of bytes read */
   return count;
 }
 
@@ -479,6 +487,11 @@ static void fifoed_avalon_uart_rxirq (fifoed_avalon_uart_state* sp,
                                    alt_u32              status)
 {
   alt_u32 next;
+
+  // capture current high-resolution timestamp.
+  // this will correspond to the time of end of the received message + idle timeout gap
+  alt_u32 divisor = alt_timestamp_freq()/1000000;
+  sp->rx_timestamp = alt_timestamp() / divisor;
 
   /*
    * In a multi-threaded environment, set the read event flag to indicate

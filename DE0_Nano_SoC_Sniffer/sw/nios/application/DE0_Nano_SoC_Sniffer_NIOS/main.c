@@ -119,6 +119,7 @@ int main() {
     printf("DE0-Nano-SoC nios demo %s %s\n", __DATE__, __TIME__);
 
     alt_timestamp_start();
+
     alt_u32 divisor = alt_timestamp_freq()/1000000; // to get time in µsec
     alt_u32 time;
     alt_u32 lastactivitytime[6];
@@ -135,40 +136,40 @@ int main() {
     MSGDMADev = alt_msgdma_open(MSGDMA_0_CSR_NAME);
 	if (MSGDMADev == NULL) printf("Could not open mSGDMA\n");
 
-    char RX[4096] __attribute__ ((aligned (32)));
-	//char* RX = malloc(4096);
-	if (RX==NULL) printf("RX malloc error \n");
+	// Even though UART FIFOs are read in sequence, the DMA transfer being asynchronous,
+	// use a different buffer for each channel, in case the previous DMA is not yet complete.
+    char RX[6][4096+TIMER_0_COUNTER_SIZE/8] __attribute__ ((aligned (32)));
 
     bool msg_received;
 
     UART_RXinfo.RXBaseAddress[0] = RAMDEST_UART0_RX_START;
     UART_RXinfo.RXTopAddress[0] = RAMDEST_UART0_RX_END;
-    UART_RXinfo.RXFrameSize[0] = 4096;
+    UART_RXinfo.RXFrameSize[0] = FIFOED_AVALON_UART_0_RX_FIFO_SIZE;
     UART_RXinfo.RXNextFrameAddress[0] = RAMDEST_UART0_RX_START;
 
     UART_RXinfo.RXBaseAddress[1] = RAMDEST_UART1_RX_START;
     UART_RXinfo.RXTopAddress[1] = RAMDEST_UART1_RX_END;
-    UART_RXinfo.RXFrameSize[1] = 4096;
+    UART_RXinfo.RXFrameSize[1] = FIFOED_AVALON_UART_1_RX_FIFO_SIZE;
     UART_RXinfo.RXNextFrameAddress[1] = RAMDEST_UART1_RX_START;
 
     UART_RXinfo.RXBaseAddress[2] = RAMDEST_UART2_RX_START;
     UART_RXinfo.RXTopAddress[2] = RAMDEST_UART2_RX_END;
-    UART_RXinfo.RXFrameSize[2] = 4096;
+    UART_RXinfo.RXFrameSize[2] = FIFOED_AVALON_UART_2_RX_FIFO_SIZE;
     UART_RXinfo.RXNextFrameAddress[2] = RAMDEST_UART2_RX_START;
 
     UART_RXinfo.RXBaseAddress[3] = RAMDEST_UART3_RX_START;
     UART_RXinfo.RXTopAddress[3] = RAMDEST_UART3_RX_END;
-    UART_RXinfo.RXFrameSize[3] = 4096;
+    UART_RXinfo.RXFrameSize[3] = FIFOED_AVALON_UART_3_RX_FIFO_SIZE;
     UART_RXinfo.RXNextFrameAddress[3] = RAMDEST_UART3_RX_START;
 
     UART_RXinfo.RXBaseAddress[4] = RAMDEST_UART4_RX_START;
     UART_RXinfo.RXTopAddress[4] = RAMDEST_UART4_RX_END;
-    UART_RXinfo.RXFrameSize[4] = 4096;
+    UART_RXinfo.RXFrameSize[4] = FIFOED_AVALON_UART_4_RX_FIFO_SIZE;
     UART_RXinfo.RXNextFrameAddress[4] = RAMDEST_UART4_RX_START;
 
     UART_RXinfo.RXBaseAddress[5] = RAMDEST_UART5_RX_START;
     UART_RXinfo.RXTopAddress[5] = RAMDEST_UART5_RX_END;
-    UART_RXinfo.RXFrameSize[5] = 4096;
+    UART_RXinfo.RXFrameSize[5] = FIFOED_AVALON_UART_5_RX_FIFO_SIZE;
     UART_RXinfo.RXNextFrameAddress[5] = RAMDEST_UART5_RX_START;
 
     // Just a little LED animation to indicate that NIOS processor is alive and running
@@ -216,7 +217,7 @@ int main() {
     				enable_led(0, 0);
     			}
 
-    			int nb_read=read(uart_fd[uart_index],RX,4096);
+    			int nb_read=read(uart_fd[uart_index],RX[uart_index],4096);
 
     			if(nb_read==-1)
     			{
@@ -231,10 +232,13 @@ int main() {
     				printf("[%ld] NB read UART%d: %d\n", loop_index, uart_index, nb_read);
     				for (int i=0; i<4; i++)
     				{
-    					printf("Char %d: %u\n", i, RX[i]);
+    					printf("Char %d: %u\n", i, RX[uart_index][i]);
     				}
 
     				printf("Timestamp: %ld\n", time);
+
+    				alt_u32* rx_timestamp = (alt_u32*)(&RX[uart_index][4096]);
+    				printf("Timestamp from driver: %ld\n", *rx_timestamp);
 
     				int level;
     				level = uart_getRXFifoLevel(uart_index);
@@ -248,7 +252,7 @@ int main() {
     					err= alt_msgdma_construct_standard_mm_to_mm_descriptor(
     							MSGDMADev,
 								&MSGDMA_DESC,
-								(alt_u32*)RX, /* read address */
+								(alt_u32*)RX[uart_index], /* read address */
 								(alt_u32*)UART_RXinfo.RXNextFrameAddress[uart_index], /* write address */
 								4096, /* size in bytes */
 								0);

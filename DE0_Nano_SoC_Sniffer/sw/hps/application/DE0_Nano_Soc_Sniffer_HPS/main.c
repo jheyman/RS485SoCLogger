@@ -267,16 +267,18 @@ typedef struct {
 	char* RXBaseAddress[6];
 	char* RXTopAddress[6];
 	uint32_t RXFrameSize[6];
+	uint32_t RXTimeStampSize[6];
 	char* RXNextFrameAddress[6];
 } UART_RXinfo;
 
 unsigned int RXLatestTransferedFrameOffset[6];
 unsigned int RXLatestReceivedFrameOffset[6];
 unsigned int MaxFrameOffset[6];
+unsigned int topGap[6];
 
 int main() {
 	unsigned int i,k;
-    printf("DE0-Nano-SoC Sniffer HPS-side\n");
+    printf("DE0-Nano-SoC Sniffer HPS-side %s %s\n", __DATE__, __TIME__);
 
     open_physical_memory_device();
     mmap_peripherals();
@@ -290,13 +292,28 @@ int main() {
     // (i.e. disregard frames that may have arrived in the buffer before this program is executed)
 	for (i=0;i<6;i++)
 	{
-		MaxFrameOffset[i] = info->RXTopAddress[i] - info->RXBaseAddress[i];
+		// Since size of (data frame + timestamp) is not necessarily a divider of the buffer size, compute the number
+		// of full frames storable, and the remaining gap of bytes between the end of the last frame and the top address
+		topGap[i] = (info->RXTopAddress[i] - info->RXBaseAddress[i] + 1)%(info->RXFrameSize[i] + info->RXTimeStampSize[i]);
+
+		printf("topGap%d=%d\n", i, topGap[i]);
+
+		MaxFrameOffset[i] = info->RXTopAddress[i] - info->RXBaseAddress[i] + 1 - topGap[i];
+
+		printf("MaxFrameOffset%d=%d\n", i, MaxFrameOffset[i]);
+
+		printf("RXBaseAddress%d=%p\n", i, info->RXBaseAddress[i]);
+		printf("RXTopAddress%d=%p\n", i, info->RXTopAddress[i]);
+		printf("RXNextFrameAddress%d=%p\n", i, info->RXNextFrameAddress[i]);
+		printf("frame size = %u\n", info->RXFrameSize[i]);
+		printf("timestamp size = %u\n",info->RXTimeStampSize[i]);
 
 		if (info->RXNextFrameAddress[i] == info->RXBaseAddress[i])
-			RXLatestTransferedFrameOffset[i] = info->RXTopAddress[i] - info->RXFrameSize[i]- info->RXBaseAddress[i];
+			RXLatestReceivedFrameOffset[i] = info->RXTopAddress[i]+1 - topGap[i] - info->RXFrameSize[i] - info->RXTimeStampSize[i] - info->RXBaseAddress[i];
        	else
-       		RXLatestTransferedFrameOffset[i] = info->RXNextFrameAddress[i] - info->RXFrameSize[i]- info->RXBaseAddress[i];
+       		RXLatestReceivedFrameOffset[i] = info->RXNextFrameAddress[i] - info->RXFrameSize[i] - info->RXTimeStampSize[i] - info->RXBaseAddress[i];
 
+		RXLatestTransferedFrameOffset[i] = RXLatestReceivedFrameOffset[i];
 		printf("UART%d: initial RXTransferFrameOffset=%d\n", i, RXLatestTransferedFrameOffset[i]);
 	}
 
@@ -326,25 +343,34 @@ int main() {
         	// handle buffer rollover: if next frame is at base address, then the latest received frame must have been in the last position
         	// at the top of the buffer
         	if (info->RXNextFrameAddress[i] == info->RXBaseAddress[i])
-        		RXLatestReceivedFrameOffset[i] = info->RXTopAddress[i] - info->RXFrameSize[i]- info->RXBaseAddress[i];
+        		RXLatestReceivedFrameOffset[i] = info->RXTopAddress[i]+1 - topGap[i] - info->RXFrameSize[i] - info->RXTimeStampSize[i] - info->RXBaseAddress[i];
         	// else, just look one frame size lower than the nextFrame address
         	else
-        		RXLatestReceivedFrameOffset[i] = info->RXNextFrameAddress[i] - info->RXFrameSize[i]- info->RXBaseAddress[i];
+        		RXLatestReceivedFrameOffset[i] = info->RXNextFrameAddress[i] - info->RXFrameSize[i] - info->RXTimeStampSize[i] - info->RXBaseAddress[i];
 
         	// Then catch-up by transferring all pending messages
         	if (RXLatestReceivedFrameOffset[i] != RXLatestTransferedFrameOffset[i])
         	{
         		int nb_Frames_received = RXLatestTransferedFrameOffset[i] < RXLatestReceivedFrameOffset[i] ?
-        				(RXLatestReceivedFrameOffset[i] - RXLatestTransferedFrameOffset[i])/ info->RXFrameSize[i]:
-						(MaxFrameOffset[i] - RXLatestTransferedFrameOffset[i])/ info->RXFrameSize[i] + RXLatestReceivedFrameOffset[i]/info->RXFrameSize[i];
+        				(RXLatestReceivedFrameOffset[i] - RXLatestTransferedFrameOffset[i])/ (info->RXFrameSize[i]+info->RXTimeStampSize[i]):
+						(MaxFrameOffset[i] - RXLatestTransferedFrameOffset[i])/ (info->RXFrameSize[i]+info->RXTimeStampSize[i]) + RXLatestReceivedFrameOffset[i]/(info->RXFrameSize[i]+info->RXTimeStampSize[i]);
 
         		printf("Got %d frames on channel %d\n", nb_Frames_received, i);
 
         		// Flush all pending messages
-        		while( RXLatestReceivedFrameOffset[i] != RXLatestTransferedFrameOffset[i])
+        		while( RXLatestTransferedFrameOffset[i] != RXLatestReceivedFrameOffset[i])
         		{
+        			// Determine where next frame is
+        			RXLatestTransferedFrameOffset[i] += info->RXFrameSize[i] + info->RXTimeStampSize[i];
+        			// rollover
+        			if (RXLatestTransferedFrameOffset[i] >= MaxFrameOffset[i]) RXLatestTransferedFrameOffset[i] = 0;
+        			printf("UART%d: RXTransferFrameOffset=%d\n", i, RXLatestTransferedFrameOffset[i]);
+
         			// Figure out logical address
-        			char* frameAddr = RAMDest_UART_RX[i] + RXLatestReceivedFrameOffset[i];
+        			char* frameAddr = RAMDest_UART_RX[i] + RXLatestTransferedFrameOffset[i];
+        			char* timestampAddr = frameAddr + info->RXFrameSize[i];
+
+            		printf("timestamp = %llu\n",*(unsigned long long*)timestampAddr);
 
         	    	uint32_t * addr;
         	    	addr = (uint32_t*)frameAddr;
@@ -355,10 +381,9 @@ int main() {
         	    	}
         	    	printf("\n");
 
-
         			char bufToSend[1500];
 
-        			sprintf(bufToSend, "%015lu:", (unsigned long)123456789);
+        			sprintf(bufToSend, "%015lu:", *(unsigned long*)timestampAddr);
        			    sprintf(bufToSend+16, "%04lu:", ethMsgIndex);
        			    sprintf(bufToSend+21, "%02u:", i);
        			    memcpy(bufToSend+24, frameAddr, 1024);
@@ -372,9 +397,6 @@ int main() {
 
         			ethMsgIndex++ ;
         		    if (ethMsgIndex > 999) ethMsgIndex = 0;
-
-        		    RXLatestTransferedFrameOffset[i] += info->RXFrameSize[i];
-        			printf("UART%d: RXTransferFrameOffset=%d\n", i, RXLatestTransferedFrameOffset[i]);
         		}
         	}
 		}

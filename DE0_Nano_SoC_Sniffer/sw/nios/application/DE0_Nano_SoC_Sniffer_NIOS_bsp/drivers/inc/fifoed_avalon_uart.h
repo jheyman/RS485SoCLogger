@@ -203,7 +203,7 @@ typedef struct  fifoed_avalon_uart_state_s
                                      * write buffer in multi-threaded mode */
   alt_u8           rx_buf[FIFOED_AVALON_UART_BUF_LEN]; /* The receive buffer */
   alt_u8           tx_buf[FIFOED_AVALON_UART_BUF_LEN]; /* The transmit buffer */
-  alt_u32          rx_timestamp; /* timestamp of first byte of received message */
+  alt_u64          rx_timestamp; /* timestamp of first byte of received message */
 } fifoed_avalon_uart_state;
 //#endif
 /*

@@ -232,8 +232,8 @@ int fifoed_avalon_uart_read (fifoed_avalon_uart_state* sp, char* ptr, int len, i
 
   int count                = 0;
 
-  // Compute pointer to store timestamp after data buffer.
-  // Obviously, assumes that 4 extra bytes have been allocated for this there...
+  // Compute pointer to store the 64-bit timestamp after data buffer.
+  // Obviously, assumes that 8 extra bytes have been allocated for this there...
   char *timestamp_address = ptr+len;
 
   /* 
@@ -345,8 +345,8 @@ int fifoed_avalon_uart_read (fifoed_avalon_uart_state* sp, char* ptr, int len, i
   alt_irq_enable_all (context);
 
   // Append the end of frame timestamp after the data buffer
-  // Obviously, assumes that 4 extra bytes have been allocated for this
-  *(alt_u32*)timestamp_address = sp->rx_timestamp;
+  // Obviously, assumes that 8 extra bytes have been allocated for this
+  *(alt_u64*)timestamp_address = sp->rx_timestamp;
 
   /* Return the number of bytes read */
   return count;

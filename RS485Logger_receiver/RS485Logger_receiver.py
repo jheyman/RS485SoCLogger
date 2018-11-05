@@ -19,20 +19,13 @@ parser.read('RS485Logger.ini')
 
 # Read config params
 LOG_FILENAME = parser.get('config', 'log_filename')
+
 #SERVER_IP = parser.get('config', 'server_ip')
 LISTEN_PORT = parser.getint('config', 'listen_port')
 
+# Get custom names of each RX channel
 CHANNELS_LIST = parser.get('config', 'channels')
-
-channels = [ chunk.strip() for chunk in CHANNELS_LIST.split(",") ]
-
-print channels
-
-
- 
-
-
-
+channel_names = [ chunk.strip() for chunk in CHANNELS_LIST.split(",") ]
 
 REF_DATA_HEX = parser.get('config', 'reference_data_hex')
 ExpectedData=[]
@@ -102,17 +95,17 @@ try:
 			recvList = data.split(':');
 			timestamp = recvList[0]
 			msgIndex = recvList[1]
-			channelIndex = recvList[2]
+			channelIndex = int(recvList[2])
 			payload_as_charlist = ''.join(recvList[3:])
 			payload= [ord(elem) for elem in payload_as_charlist]
 			cmp_list = payload
 
 			if (doNotCheckMessage):
-				logger.info( '%s:%s:%s:%s' % (timestamp, msgIndex, channelIndex,','.join(x.encode('hex') for x in payload_as_charlist)))
+				logger.info( '%s:%s:%s:%s' % (timestamp, msgIndex, channel_names[channelIndex],','.join(x.encode('hex') for x in payload_as_charlist)))
 			elif cmp(payload, ExpectedData) == 0:
-				logger.info( '%s:%s:%s:OK' % (timestamp,msgIndex,channelIndex))
+				logger.info( '%s:%s:%s:OK' % (timestamp,msgIndex,channel_names[channelIndex]))
 			else:
-				logger.info( '%s:%s:%s:!!!!!!ERROR!!!!!!:%s' % (timestamp, msgIndex, channelIndex, ','.join(x.encode('hex') for x in payload_as_charlist)))
+				logger.info( '%s:%s:%s:!!!!!!ERROR!!!!!!:%s' % (timestamp, msgIndex, channel_names[channelIndex], ','.join(x.encode('hex') for x in payload_as_charlist)))
 		except KeyboardInterrupt:
 			raise
 		except:

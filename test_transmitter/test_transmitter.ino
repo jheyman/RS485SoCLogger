@@ -101,6 +101,64 @@ void loop()
 
   digitalWrite (LED_PIN, LOW);  // turn LED back off 
 
+
+
+
+
+
+
+
+
+delay(123);
+ digitalWrite (ENABLE_PIN, HIGH);  // enable sending
+  digitalWrite (LED_PIN, HIGH);  // flash LED 
+
+  
+   for(int i=0; i < 8;i++)
+   {
+    Serial.write(temp);
+   }
+   //delay(80);
+   for(int i=0; i < 8;i++)
+   {
+    Serial.write(temp+1);
+   }
+   //delay(80);
+   for(int i=0; i < 8;i++)
+   {
+    Serial.write(temp+2);
+   }
+   //delay(80);
+      for(int i=0; i < 8;i++)
+   {
+    Serial.write(temp+3);
+   }  
+   /* 
+   for(int i=0; i < 4094;i++)
+   {
+    //Serial.write(i%256);
+    Serial.write(temp);
+   }
+*/
+
+  // wait 1ms before release the enable: the last chars might still be in the RX buffer and not yet sent.
+  delay(1);
+
+  digitalWrite (ENABLE_PIN, LOW);  // disable sending
+
+  // delay small enough to fit tested message rate, but long enough that the LED flash is visible
+  delay(10);
+
+  digitalWrite (LED_PIN, LOW);  // turn LED back off 
+
+
+
+
+
+
+
+
+
   // the rest of the delay is such that the sum of the three delays = the desired message period.
   delay(989);
 

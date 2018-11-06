@@ -326,8 +326,15 @@ int main() {
 
     bzero(&servaddr,sizeof(servaddr));
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr("192.168.0.11");
+    servaddr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
     servaddr.sin_port = htons(8888);
+
+    // Enabling broadcast option is required by POSIX, and Linux enforces it
+    int broadcastEnable=1;
+    int ret=setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &broadcastEnable, sizeof(broadcastEnable));
+    if (ret !=0) {
+    	perror("cannot set socket in broadcast mode");
+    }
 
     unsigned long ethMsgIndex = 0;
 

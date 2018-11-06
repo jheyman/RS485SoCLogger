@@ -116,6 +116,9 @@ struct {
 // timestamp based on the 64-bit TIMER_0 = 8 bytes
 #define TIMESTAMP_SIZE TIMER_0_COUNTER_SIZE/8
 
+unsigned int channelRXBaudRate[6];
+unsigned int channelRXGapDetectionChars[6];
+
 int main() {
 	unsigned long loop_index=0;
 
@@ -154,36 +157,48 @@ int main() {
     UART_RXinfo.RXFrameSize[0] = FIFOED_AVALON_UART_0_RX_FIFO_SIZE;
     UART_RXinfo.RXTimeStampSize[0] = TIMESTAMP_SIZE;
     UART_RXinfo.RXNextFrameAddress[0] = RAMDEST_UART0_RX_START;
+    channelRXBaudRate[0] = FIFOED_AVALON_UART_0_BAUD;
+    channelRXGapDetectionChars[0] = FIFOED_AVALON_UART_0_GAP_VALUE;
 
     UART_RXinfo.RXBaseAddress[1] = RAMDEST_UART1_RX_START;
     UART_RXinfo.RXTopAddress[1] = RAMDEST_UART1_RX_END;
     UART_RXinfo.RXFrameSize[1] = FIFOED_AVALON_UART_1_RX_FIFO_SIZE;
     UART_RXinfo.RXTimeStampSize[1] = TIMESTAMP_SIZE;
     UART_RXinfo.RXNextFrameAddress[1] = RAMDEST_UART1_RX_START;
+    channelRXBaudRate[1] = FIFOED_AVALON_UART_1_BAUD;
+    channelRXGapDetectionChars[1] = FIFOED_AVALON_UART_1_GAP_VALUE;
 
     UART_RXinfo.RXBaseAddress[2] = RAMDEST_UART2_RX_START;
     UART_RXinfo.RXTopAddress[2] = RAMDEST_UART2_RX_END;
     UART_RXinfo.RXFrameSize[2] = FIFOED_AVALON_UART_2_RX_FIFO_SIZE;
     UART_RXinfo.RXTimeStampSize[2] = TIMESTAMP_SIZE;
     UART_RXinfo.RXNextFrameAddress[2] = RAMDEST_UART2_RX_START;
+    channelRXBaudRate[2] = FIFOED_AVALON_UART_2_BAUD;
+    channelRXGapDetectionChars[2] = FIFOED_AVALON_UART_2_GAP_VALUE;
 
     UART_RXinfo.RXBaseAddress[3] = RAMDEST_UART3_RX_START;
     UART_RXinfo.RXTopAddress[3] = RAMDEST_UART3_RX_END;
     UART_RXinfo.RXFrameSize[3] = FIFOED_AVALON_UART_3_RX_FIFO_SIZE;
     UART_RXinfo.RXTimeStampSize[3] = TIMESTAMP_SIZE;
     UART_RXinfo.RXNextFrameAddress[3] = RAMDEST_UART3_RX_START;
+    channelRXBaudRate[3] = FIFOED_AVALON_UART_3_BAUD;
+    channelRXGapDetectionChars[3] = FIFOED_AVALON_UART_3_GAP_VALUE;
 
     UART_RXinfo.RXBaseAddress[4] = RAMDEST_UART4_RX_START;
     UART_RXinfo.RXTopAddress[4] = RAMDEST_UART4_RX_END;
     UART_RXinfo.RXFrameSize[4] = FIFOED_AVALON_UART_4_RX_FIFO_SIZE;
     UART_RXinfo.RXTimeStampSize[4] = TIMESTAMP_SIZE;
     UART_RXinfo.RXNextFrameAddress[4] = RAMDEST_UART4_RX_START;
+    channelRXBaudRate[4] = FIFOED_AVALON_UART_4_BAUD;
+    channelRXGapDetectionChars[4] = FIFOED_AVALON_UART_4_GAP_VALUE;
 
     UART_RXinfo.RXBaseAddress[5] = RAMDEST_UART5_RX_START;
     UART_RXinfo.RXTopAddress[5] = RAMDEST_UART5_RX_END;
     UART_RXinfo.RXFrameSize[5] = FIFOED_AVALON_UART_5_RX_FIFO_SIZE;
     UART_RXinfo.RXTimeStampSize[5] = TIMESTAMP_SIZE;
     UART_RXinfo.RXNextFrameAddress[5] = RAMDEST_UART5_RX_START;
+    channelRXBaudRate[5] = FIFOED_AVALON_UART_5_BAUD;
+    channelRXGapDetectionChars[5] = FIFOED_AVALON_UART_5_GAP_VALUE;
 
 	printf("Initializing UART INFO in HPS memory\n");
 
@@ -274,11 +289,16 @@ int main() {
     				}
 
     				// DEBUG
-    				printf("Timestamp: %lld\n", time);
+    				printf("Timestamp: %llu\n", time);
 
     				//DEBUG
-    				alt_u32* rx_timestamp = (alt_u32*)(&RX[uart_index][UART_RXinfo.RXFrameSize[uart_index]]);
-    				printf("Timestamp from driver: %ld\n", *rx_timestamp);
+    				alt_u64* rx_timestamp = (alt_u64*)(&RX[uart_index][UART_RXinfo.RXFrameSize[uart_index]]);
+    				printf("Uncorrected timestamp from driver: %llu\n", *rx_timestamp);
+
+    				// Need to compute the timestamp corresponding to the arrival of the first byte in the message,
+    				// so subtract the time of the message data bytes reception, plus the inter-message gap detection time
+    				*rx_timestamp -= (unsigned long long)(nb_read + channelRXGapDetectionChars[uart_index])*8*1000000 / channelRXBaudRate[uart_index];
+    				printf("Timestamp from driver (corrected: %llu\n", *rx_timestamp);
 
     				// DEBUG
     				int level;

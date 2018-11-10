@@ -73,7 +73,9 @@ void enable_led(int channel, bool onoff) {
 
 // Assign 32MB for RX and 32MB for TX for each channel
 #define RAMDEST_UART0_RX_START  (void*)0x20000000
-#define RAMDEST_UART0_RX_END    (void*)0x21FFFFFF
+#define RAMDEST_UART0_RX_END    (void*)0x2000752F
+//#define RAMDEST_UART0_RX_END    (void*)0x21FFFFFF
+
 #define RAMDEST_UART0_TX_START  (void*)0x22000000
 #define RAMDEST_UART0_TX_END    (void*)0x23FFFFFF
 
@@ -107,6 +109,7 @@ struct {
 	char* RXTopAddress[6];
 	uint32_t RXFrameSize[6];
 	uint32_t RXTimeStampSize[6];
+	uint32_t RXFrameLengthSize[6];
 	char* RXNextFrameAddress[6];
 } UART_RXinfo;
 
@@ -115,6 +118,9 @@ struct {
 
 // timestamp based on the 64-bit TIMER_0 = 8 bytes
 #define TIMESTAMP_SIZE TIMER_0_COUNTER_SIZE/8
+
+// 4 bytes to store the frame length actually received
+#define FRAME_LENGTH_SIZE 4
 
 unsigned int channelRXBaudRate[6];
 unsigned int channelRXGapDetectionChars[6];
@@ -148,7 +154,7 @@ int main() {
 	// Even though UART FIFOs are read in sequence, the DMA transfer being asynchronous,
 	// use a different buffer for each channel, in case the previous DMA is not yet complete.
 	// ASSUME that the worst case/max data size is 4096 bytes.
-    char RX[6][4096+TIMESTAMP_SIZE] __attribute__ ((aligned (32)));
+    char RX[6][4096+TIMESTAMP_SIZE+FRAME_LENGTH_SIZE] __attribute__ ((aligned (32)));
 
     bool msg_received;
 
@@ -156,6 +162,7 @@ int main() {
     UART_RXinfo.RXTopAddress[0] = RAMDEST_UART0_RX_END;
     UART_RXinfo.RXFrameSize[0] = FIFOED_AVALON_UART_0_RX_FIFO_SIZE;
     UART_RXinfo.RXTimeStampSize[0] = TIMESTAMP_SIZE;
+    UART_RXinfo.RXFrameLengthSize[0] = FRAME_LENGTH_SIZE;
     UART_RXinfo.RXNextFrameAddress[0] = RAMDEST_UART0_RX_START;
     channelRXBaudRate[0] = FIFOED_AVALON_UART_0_BAUD;
     channelRXGapDetectionChars[0] = FIFOED_AVALON_UART_0_GAP_VALUE;
@@ -165,6 +172,7 @@ int main() {
     UART_RXinfo.RXFrameSize[1] = FIFOED_AVALON_UART_1_RX_FIFO_SIZE;
     UART_RXinfo.RXTimeStampSize[1] = TIMESTAMP_SIZE;
     UART_RXinfo.RXNextFrameAddress[1] = RAMDEST_UART1_RX_START;
+    UART_RXinfo.RXFrameLengthSize[1] = FRAME_LENGTH_SIZE;
     channelRXBaudRate[1] = FIFOED_AVALON_UART_1_BAUD;
     channelRXGapDetectionChars[1] = FIFOED_AVALON_UART_1_GAP_VALUE;
 
@@ -173,6 +181,7 @@ int main() {
     UART_RXinfo.RXFrameSize[2] = FIFOED_AVALON_UART_2_RX_FIFO_SIZE;
     UART_RXinfo.RXTimeStampSize[2] = TIMESTAMP_SIZE;
     UART_RXinfo.RXNextFrameAddress[2] = RAMDEST_UART2_RX_START;
+    UART_RXinfo.RXFrameLengthSize[2] = FRAME_LENGTH_SIZE;
     channelRXBaudRate[2] = FIFOED_AVALON_UART_2_BAUD;
     channelRXGapDetectionChars[2] = FIFOED_AVALON_UART_2_GAP_VALUE;
 
@@ -181,6 +190,7 @@ int main() {
     UART_RXinfo.RXFrameSize[3] = FIFOED_AVALON_UART_3_RX_FIFO_SIZE;
     UART_RXinfo.RXTimeStampSize[3] = TIMESTAMP_SIZE;
     UART_RXinfo.RXNextFrameAddress[3] = RAMDEST_UART3_RX_START;
+    UART_RXinfo.RXFrameLengthSize[3] = FRAME_LENGTH_SIZE;
     channelRXBaudRate[3] = FIFOED_AVALON_UART_3_BAUD;
     channelRXGapDetectionChars[3] = FIFOED_AVALON_UART_3_GAP_VALUE;
 
@@ -189,6 +199,7 @@ int main() {
     UART_RXinfo.RXFrameSize[4] = FIFOED_AVALON_UART_4_RX_FIFO_SIZE;
     UART_RXinfo.RXTimeStampSize[4] = TIMESTAMP_SIZE;
     UART_RXinfo.RXNextFrameAddress[4] = RAMDEST_UART4_RX_START;
+    UART_RXinfo.RXFrameLengthSize[4] = FRAME_LENGTH_SIZE;
     channelRXBaudRate[4] = FIFOED_AVALON_UART_4_BAUD;
     channelRXGapDetectionChars[4] = FIFOED_AVALON_UART_4_GAP_VALUE;
 
@@ -197,6 +208,7 @@ int main() {
     UART_RXinfo.RXFrameSize[5] = FIFOED_AVALON_UART_5_RX_FIFO_SIZE;
     UART_RXinfo.RXTimeStampSize[5] = TIMESTAMP_SIZE;
     UART_RXinfo.RXNextFrameAddress[5] = RAMDEST_UART5_RX_START;
+    UART_RXinfo.RXFrameLengthSize[5] = FRAME_LENGTH_SIZE;
     channelRXBaudRate[5] = FIFOED_AVALON_UART_5_BAUD;
     channelRXGapDetectionChars[5] = FIFOED_AVALON_UART_5_GAP_VALUE;
 
@@ -265,7 +277,7 @@ int main() {
 
     			// Proceed to read the channel. The call is NOT-blocking, so as to scan all channels continuously,
     			// and only grab data when it is present in the FIFO.
-    			int nb_read=read(uart_fd[uart_index],RX[uart_index],UART_RXinfo.RXFrameSize[uart_index]);
+    			unsigned int nb_read=read(uart_fd[uart_index],RX[uart_index],UART_RXinfo.RXFrameSize[uart_index]);
 
     			if(nb_read==-1)
     			{
@@ -300,6 +312,10 @@ int main() {
     				*rx_timestamp -= (unsigned long long)(nb_read + channelRXGapDetectionChars[uart_index])*8*1000000 / channelRXBaudRate[uart_index];
     				printf("Timestamp from driver (corrected: %llu\n", *rx_timestamp);
 
+    				// fill-in the nb of bytes in frame, after the timestamp
+    				unsigned int* frame_length_field = (unsigned int*)&RX[uart_index][4096+TIMESTAMP_SIZE];
+    				*frame_length_field = nb_read;
+
     				// DEBUG
     				int level;
     				level = uart_getRXFifoLevel(uart_index);
@@ -316,7 +332,7 @@ int main() {
 								&MSGDMA_DESC,
 								(alt_u32*)RX[uart_index], /* read address */
 								(alt_u32*)UART_RXinfo.RXNextFrameAddress[uart_index], /* write address */
-								UART_RXinfo.RXFrameSize[uart_index] + UART_RXinfo.RXTimeStampSize[uart_index], /* size in bytes of data + timestamp*/
+								UART_RXinfo.RXFrameSize[uart_index] + UART_RXinfo.RXTimeStampSize[uart_index] + UART_RXinfo.RXFrameLengthSize[uart_index] , /* size in bytes of data + timestamp*/
 								0);
 
     					err = alt_msgdma_standard_descriptor_async_transfer(MSGDMADev, &MSGDMA_DESC);
@@ -326,13 +342,16 @@ int main() {
     						// DEBUG
     						printf("Async DMA err %d\n", err);
     					}
+        				printf("DONE Writing at address 0x%p\n", UART_RXinfo.RXNextFrameAddress[uart_index]);
 
     					// Move destination pointer for next transfer.
-    					UART_RXinfo.RXNextFrameAddress[uart_index] += UART_RXinfo.RXFrameSize[uart_index] + UART_RXinfo.RXTimeStampSize[uart_index];
+    					UART_RXinfo.RXNextFrameAddress[uart_index] += UART_RXinfo.RXFrameSize[uart_index] + UART_RXinfo.RXTimeStampSize[uart_index]+ UART_RXinfo.RXFrameLengthSize[uart_index];
 
-    					// Rollover if needed
-    					if (UART_RXinfo.RXNextFrameAddress[uart_index] > UART_RXinfo.RXTopAddress[uart_index])
+    					// Rollover if needed (when there is not enough space left to store one frame plus its timestamp and length
+    					if (UART_RXinfo.RXNextFrameAddress[uart_index] >= UART_RXinfo.RXTopAddress[uart_index] - UART_RXinfo.RXFrameSize[uart_index] - UART_RXinfo.RXTimeStampSize[uart_index] - UART_RXinfo.RXFrameLengthSize[uart_index])
     						UART_RXinfo.RXNextFrameAddress[uart_index] = UART_RXinfo.RXBaseAddress[uart_index];
+
+    					printf("Next frame will go at address 0x%p\n", UART_RXinfo.RXNextFrameAddress[uart_index]);
     				}
     				else
     					printf("ERROR: MSGDMADev is NULL!\n");
@@ -340,7 +359,6 @@ int main() {
     				time_stop = alt_timestamp() / divisor;
 
     				// DEBUG
-    				printf("DONE Writing.\n");
     				printf("Timestamp delta: %lld\n", time_stop-time_start);
 
     				/*

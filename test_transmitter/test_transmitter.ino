@@ -1,5 +1,7 @@
-const byte ENABLE_PIN = 2;
-const byte TRIG_PIN = 3;
+const byte ENABLE_PIN = 9;
+const byte BUTTON_PIN = 10;
+const byte TRIG_PIN = 12;
+const byte OUTPUT_PIN = 7;
 const byte LED_PIN = 13;
 
 #define ERROR_WRONG_DATA_EVERY 100
@@ -14,7 +16,10 @@ void setup()
   Serial.begin(1000000);
   pinMode (ENABLE_PIN, OUTPUT);  // driver output enable
   pinMode (LED_PIN, OUTPUT);  // built-in LED
-  pinMode (TRIG_PIN, INPUT_PULLUP);  // button
+  pinMode (OUTPUT_PIN, OUTPUT);  // slave trigger output
+  digitalWrite (OUTPUT_PIN, HIGH);  // slave trigger disabled at first
+  pinMode (BUTTON_PIN, INPUT_PULLUP);  // button
+  pinMode (TRIG_PIN, INPUT_PULLUP);  // trig input from master
 
   for (int i=0; i<120;i++)
   {
@@ -30,13 +35,14 @@ void setup()
 void loop()
 {
 
-  int trig;
+  int trig, button;
   do {
+    button = digitalRead(BUTTON_PIN);
     trig = digitalRead(TRIG_PIN);
   }
-  while(trig != LOW);
+  while(trig != LOW && button != LOW);
  
-  
+  digitalWrite (OUTPUT_PIN, LOW);  // enable trigger to slave arduino
   digitalWrite (ENABLE_PIN, HIGH);  // enable sending
   digitalWrite (LED_PIN, HIGH);  // flash LED 
 
@@ -104,11 +110,7 @@ void loop()
 
 
 
-
-
-
-
-
+#if 0
 delay(123);
  digitalWrite (ENABLE_PIN, HIGH);  // enable sending
   digitalWrite (LED_PIN, HIGH);  // flash LED 
@@ -116,30 +118,13 @@ delay(123);
   
    for(int i=0; i < 8;i++)
    {
-    Serial.write(temp);
+    Serial.write(temp+4);
    }
    //delay(80);
-   for(int i=0; i < 8;i++)
+   for(int i=0; i < 7;i++)
    {
-    Serial.write(temp+1);
+    Serial.write(temp+5);
    }
-   //delay(80);
-   for(int i=0; i < 8;i++)
-   {
-    Serial.write(temp+2);
-   }
-   //delay(80);
-      for(int i=0; i < 8;i++)
-   {
-    Serial.write(temp+3);
-   }  
-   /* 
-   for(int i=0; i < 4094;i++)
-   {
-    //Serial.write(i%256);
-    Serial.write(temp);
-   }
-*/
 
   // wait 1ms before release the enable: the last chars might still be in the RX buffer and not yet sent.
   delay(1);
@@ -151,8 +136,11 @@ delay(123);
 
   digitalWrite (LED_PIN, LOW);  // turn LED back off 
 
+#endif
 
 
+
+  digitalWrite (OUTPUT_PIN, HIGH);  // reset trigger to slave arduino
 
 
 

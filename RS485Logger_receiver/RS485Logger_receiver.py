@@ -96,16 +96,17 @@ try:
 			timestamp = recvList[0]
 			msgIndex = recvList[1]
 			channelIndex = int(recvList[2])
-			payload_as_charlist = ''.join(recvList[3:])
+			frameLength = int(recvList[3])
+			payload_as_charlist = ''.join(recvList[4:])
 			payload= [ord(elem) for elem in payload_as_charlist]
 			cmp_list = payload
 
 			if (doNotCheckMessage):
-				logger.info( '%s:%s:%s:%s' % (timestamp, msgIndex, channel_names[channelIndex],','.join(x.encode('hex') for x in payload_as_charlist)))
+				logger.info( '%s:%s:%s:%s:%s' % (timestamp, msgIndex, channel_names[channelIndex], frameLength, ','.join(x.encode('hex') for x in payload_as_charlist)))
 			elif cmp(payload, ExpectedData) == 0:
-				logger.info( '%s:%s:%s:OK' % (timestamp,msgIndex,channel_names[channelIndex]))
+				logger.info( '%s:%s:%s:%s:OK' % (timestamp,msgIndex,channel_names[channelIndex], frameLength))
 			else:
-				logger.info( '%s:%s:%s:!!!!!!ERROR!!!!!!:%s' % (timestamp, msgIndex, channel_names[channelIndex], ','.join(x.encode('hex') for x in payload_as_charlist)))
+				logger.info( '%s:%s:%s:%s:!!!!!!ERROR!!!!!!:%s' % (timestamp, msgIndex, channel_names[channelIndex],  frameLength, ','.join(x.encode('hex') for x in payload_as_charlist)))
 		except KeyboardInterrupt:
 			raise
 		except:

@@ -31,19 +31,21 @@ void setup()
 
   sendWrongBuf[30] = 255;
 } 
+
+#define INTERFRAME_DELAY_MILLISECONDS 2
+#define FRAME_SIZE 256
+#define NB_FRAMES_SENT_UPON_TRIGGER 2
   
 void loop()
 {
-
   int trig, button;
   do {
     button = digitalRead(BUTTON_PIN);
     trig = digitalRead(TRIG_PIN);
   }
-  while(trig != LOW && button != LOW);
+  while(/*trig != LOW &&*/ button != LOW);
  
   digitalWrite (OUTPUT_PIN, LOW);  // enable trigger to slave arduino
-  digitalWrite (ENABLE_PIN, HIGH);  // enable sending
   digitalWrite (LED_PIN, HIGH);  // flash LED 
 
 /*
@@ -66,90 +68,61 @@ void loop()
 
   //sendBuf[0]= loop_index%256;
   //Serial.write(&sendBuf[0],loop_index);
+
+
+  digitalWrite (ENABLE_PIN, HIGH);  // enable sending
+     
+  for (int frame=0; frame < NB_FRAMES_SENT_UPON_TRIGGER; frame++)
+  {
+     /*
+     int temp = loop_index%256;
+     //Serial.write(loop_index%256);
   
-    int temp = loop_index%256;
-   //Serial.write(loop_index%256);
+     for(int i=0; i < 8;i++)
+     {
+      Serial.write(temp);
+     }
+     //delay(80);
+     for(int i=0; i < 8;i++)
+     {
+      Serial.write(temp+1);
+     }
+     //delay(80);
+     for(int i=0; i < 8;i++)
+     {
+      Serial.write(temp+2);
+     }
+     //delay(80);
+        for(int i=0; i < 8;i++)
+     {
+      Serial.write(temp+3);
+     }  
+     */
 
-   for(int i=0; i < 8;i++)
-   {
-    Serial.write(temp);
-   }
-   //delay(80);
-   for(int i=0; i < 8;i++)
-   {
-    Serial.write(temp+1);
-   }
-   //delay(80);
-   for(int i=0; i < 8;i++)
-   {
-    Serial.write(temp+2);
-   }
-   //delay(80);
-      for(int i=0; i < 8;i++)
-   {
-    Serial.write(temp+3);
-   }  
-   /* 
-   for(int i=0; i < 4094;i++)
-   {
-    //Serial.write(i%256);
-    Serial.write(temp);
-   }
-*/
-
+     for(unsigned int i=0; i < FRAME_SIZE;i++)
+     {
+      //Serial.write(i%256);
+      Serial.write(66);
+     }
+   
+    delay(INTERFRAME_DELAY_MILLISECONDS);
+  }
   // wait 1ms before release the enable: the last chars might still be in the RX buffer and not yet sent.
   delay(1);
-
-  digitalWrite (ENABLE_PIN, LOW);  // disable sending
-
-  // delay small enough to fit tested message rate, but long enough that the LED flash is visible
-  delay(10);
-
-  digitalWrite (LED_PIN, LOW);  // turn LED back off 
-
-
-
-
-#if 0
-delay(123);
- digitalWrite (ENABLE_PIN, HIGH);  // enable sending
-  digitalWrite (LED_PIN, HIGH);  // flash LED 
-
   
-   for(int i=0; i < 8;i++)
-   {
-    Serial.write(temp+4);
-   }
-   //delay(80);
-   for(int i=0; i < 7;i++)
-   {
-    Serial.write(temp+5);
-   }
-
-  // wait 1ms before release the enable: the last chars might still be in the RX buffer and not yet sent.
-  delay(1);
-
   digitalWrite (ENABLE_PIN, LOW);  // disable sending
-
-  // delay small enough to fit tested message rate, but long enough that the LED flash is visible
-  delay(10);
-
   digitalWrite (LED_PIN, LOW);  // turn LED back off 
-
-#endif
-
-
-
   digitalWrite (OUTPUT_PIN, HIGH);  // reset trigger to slave arduino
 
+  // block until button is released/trig is reset, to not chain multiple sends in one push
+  do {
+    button = digitalRead(BUTTON_PIN);
+    trig = digitalRead(TRIG_PIN);
+  }
+  while(trig == LOW || button == LOW);
 
-
-
-
-
-  // the rest of the delay is such that the sum of the three delays = the desired message period.
-  delay(989);
-
-  loop_index+=4;
+  // poor man's debouncing
+  delay(200);
+   
 }
 

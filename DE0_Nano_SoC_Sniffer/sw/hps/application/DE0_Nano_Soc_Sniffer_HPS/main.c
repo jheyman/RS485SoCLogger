@@ -7,8 +7,6 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
-
-
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -16,7 +14,6 @@
 #include <unistd.h>
 #include <strings.h>
 #include <fcntl.h>
-
 
 #include "alt_generalpurpose_io.h"
 #include "hwlib.h"
@@ -243,7 +240,6 @@ void toggle_hps_led() {
 }
 
 void setup_fpga_leds() {
-	printf("setup leds\n");
     alt_write_word(fpga_leds, 0x0001);
 }
 
@@ -254,12 +250,10 @@ void toggle_fpga_leds() {
 }
 
 void clear_leds() {
-	printf("clear leds\n");
     alt_write_word(fpga_leds, 0x0000);
 }
 
 void set_leds() {
-	printf("set leds\n");
     alt_write_word(fpga_leds, 0x0002);
 }
 
@@ -274,12 +268,14 @@ typedef struct {
 
 unsigned int RXLatestTransferedFrameOffset[6];
 unsigned int RXLatestReceivedFrameOffset[6];
+unsigned int RXStat_NbReceivedFrames[6];
 unsigned int MaxFrameOffset[6];
 unsigned int topGap[6];
 
 int main() {
-	unsigned int i,k;
-    printf("DE0-Nano-SoC Sniffer HPS-side %s %s\n", __DATE__, __TIME__);
+	unsigned int i/*,k*/;
+	printf("\e[2J");
+    printf("DE0-Nano-SoC Sniffer HPS-side compiled %s %s\n", __DATE__, __TIME__);
 
     open_physical_memory_device();
     mmap_peripherals();
@@ -297,18 +293,20 @@ int main() {
 		// of full frames storable, and the remaining gap of bytes between the end of the last frame and the top address
 		topGap[i] = (info->RXTopAddress[i] - info->RXBaseAddress[i] + 1)%(info->RXFrameSize[i] + info->RXTimeStampSize[i]+info->RXFrameLengthSize[i]);
 
-		printf("topGap%d=%d\n", i, topGap[i]);
+		//printf("topGap%d=%d\n", i, topGap[i]);
 
 		MaxFrameOffset[i] = info->RXTopAddress[i] - info->RXBaseAddress[i] + 1 - topGap[i];
 
-		printf("MaxFrameOffset%d=%d\n", i, MaxFrameOffset[i]);
+		RXStat_NbReceivedFrames[i] = 0;
 
-		printf("RXBaseAddress%d=%p\n", i, info->RXBaseAddress[i]);
-		printf("RXTopAddress%d=%p\n", i, info->RXTopAddress[i]);
-		printf("RXNextFrameAddress%d=%p\n", i, info->RXNextFrameAddress[i]);
-		printf("frame size = %u\n", info->RXFrameSize[i]);
-		printf("timestamp size = %u\n",info->RXTimeStampSize[i]);
-		printf("framelength size = %u\n", info->RXFrameLengthSize[i]);
+		//printf("MaxFrameOffset%d=%d\n", i, MaxFrameOffset[i]);
+
+		//printf("RXBaseAddress%d=%p\n", i, info->RXBaseAddress[i]);
+		//printf("RXTopAddress%d=%p\n", i, info->RXTopAddress[i]);
+		//printf("RXNextFrameAddress%d=%p\n", i, info->RXNextFrameAddress[i]);
+		//printf("frame size = %u\n", info->RXFrameSize[i]);
+		//printf("timestamp size = %u\n",info->RXTimeStampSize[i]);
+		//printf("framelength size = %u\n", info->RXFrameLengthSize[i]);
 
 		if (info->RXNextFrameAddress[i] == info->RXBaseAddress[i])
 			RXLatestReceivedFrameOffset[i] = info->RXTopAddress[i]+1 - topGap[i] - info->RXFrameSize[i] - info->RXTimeStampSize[i] - info->RXFrameLengthSize[i] - info->RXBaseAddress[i];
@@ -316,7 +314,7 @@ int main() {
        		RXLatestReceivedFrameOffset[i] = info->RXNextFrameAddress[i] - info->RXFrameSize[i] - info->RXTimeStampSize[i] - info->RXFrameLengthSize[i] - info->RXBaseAddress[i];
 
 		RXLatestTransferedFrameOffset[i] = RXLatestReceivedFrameOffset[i];
-		printf("UART%d: initial RXTransferFrameOffset=%d\n", i, RXLatestTransferedFrameOffset[i]);
+		//printf("UART%d: initial RXTransferFrameOffset=%d\n", i, RXLatestTransferedFrameOffset[i]);
 	}
 
 	// UDP socket initialization
@@ -339,14 +337,13 @@ int main() {
     }
 
     unsigned long ethMsgIndex = 0;
+    unsigned long loopIndex = 0;
+    bool receivedStuff=false;
 
     // Main scanning loop
     while (true) {
 
-    	toggle_fpga_leds();
-
-    	usleep(5*ALT_MICROSECS_IN_A_SEC);
-
+    	// Scan memory buffers for all channels
         for (i=0;i<6;i++)
 		{
         	// handle buffer rollover: if next frame is at base address, then the latest received frame must have been in the last position
@@ -360,31 +357,36 @@ int main() {
         	// Then catch-up by transferring all pending messages
         	if (RXLatestReceivedFrameOffset[i] != RXLatestTransferedFrameOffset[i])
         	{
+        		receivedStuff = true;
         		int nb_Frames_received = RXLatestTransferedFrameOffset[i] < RXLatestReceivedFrameOffset[i] ?
         				(RXLatestReceivedFrameOffset[i] - RXLatestTransferedFrameOffset[i])/ (info->RXFrameSize[i]+info->RXTimeStampSize[i]+info->RXFrameLengthSize[i]):
 						(MaxFrameOffset[i] - RXLatestTransferedFrameOffset[i])/ (info->RXFrameSize[i]+info->RXTimeStampSize[i]+info->RXFrameLengthSize[i]) + RXLatestReceivedFrameOffset[i]/(info->RXFrameSize[i]+info->RXTimeStampSize[i]+info->RXFrameLengthSize[i]);
 
-        		printf("Got %d frames on channel %d\n", nb_Frames_received, i);
+        		//printf("Got %d frames on channel %d\n", nb_Frames_received, i);
 
         		// Flush all pending messages
         		while( RXLatestTransferedFrameOffset[i] != RXLatestReceivedFrameOffset[i])
         		{
+        			RXStat_NbReceivedFrames[i]++;
+
         			// Determine where next frame is
         			RXLatestTransferedFrameOffset[i] += info->RXFrameSize[i] + info->RXTimeStampSize[i] + info->RXFrameLengthSize[i];
+
         			// rollover
         			if (RXLatestTransferedFrameOffset[i] >= MaxFrameOffset[i]) RXLatestTransferedFrameOffset[i] = 0;
-        			printf("UART%d: RXTransferFrameOffset=%d\n", i, RXLatestTransferedFrameOffset[i]);
+        			//printf("UART%d: RXTransferFrameOffset=%d\n", i, RXLatestTransferedFrameOffset[i]);
 
         			// Figure out logical addresses
         			char* frameAddr = RAMDest_UART_RX[i] + RXLatestTransferedFrameOffset[i];
         			char* timestampAddr = frameAddr + info->RXFrameSize[i];
         			char* frameLengthAddr = timestampAddr + info->RXTimeStampSize[i];
 
-            		printf("timestamp = %llu\n",*(unsigned long long*)timestampAddr);
+            		//printf("timestamp = %llu\n",*(unsigned long long*)timestampAddr);
 
             		unsigned int frameLength = *(unsigned int*)frameLengthAddr;
-            		printf("frameLength = %u\n",frameLength);
+            		//printf("frameLength = %u\n",frameLength);
 
+            		/*
         	    	char* addr;
         	    	addr = frameAddr;
         	    	for (k=0;k<frameLength;k++)
@@ -393,6 +395,7 @@ int main() {
         	    		addr++;
         	    	}
         	    	printf("\n");
+            		*/
 
         			char bufToSend[1500];
 
@@ -407,13 +410,29 @@ int main() {
         		        perror("cannot send message");
         		    }
 
-        			printf("pushed one frame from channel %d\n", i);
+        			//printf("pushed one frame from channel %d\n", i);
 
         			ethMsgIndex++ ;
         		    if (ethMsgIndex > 999) ethMsgIndex = 0;
         		}
         	}
 		}
+
+        if (receivedStuff)
+        {
+        	printf("\e[2;0f");
+        	printf("%7s %10s\n", "channel", "nbReceived");
+
+        	for (i=0;i<6;i++)
+        	{
+        		printf("%7d %10u\n", i, RXStat_NbReceivedFrames[i]);
+        	}
+        	receivedStuff = false;
+        }
+
+    	toggle_fpga_leds();
+    	usleep(ALT_MICROSECS_IN_A_SEC);
+        loopIndex++;
     }
 
     munmap_peripherals();

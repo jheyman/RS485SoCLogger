@@ -73,9 +73,7 @@ void enable_led(int channel, bool onoff) {
 
 // Assign 32MB for RX and 32MB for TX for each channel
 #define RAMDEST_UART0_RX_START  (void*)0x20000000
-#define RAMDEST_UART0_RX_END    (void*)0x2000752F
-//#define RAMDEST_UART0_RX_END    (void*)0x21FFFFFF
-
+#define RAMDEST_UART0_RX_END    (void*)0x21FFFFFF
 #define RAMDEST_UART0_TX_START  (void*)0x22000000
 #define RAMDEST_UART0_TX_END    (void*)0x23FFFFFF
 
@@ -126,8 +124,6 @@ unsigned int channelRXBaudRate[6];
 unsigned int channelRXGapDetectionChars[6];
 
 int main() {
-	unsigned long loop_index=0;
-
 	alt_msgdma_dev *MSGDMADev;
 	alt_msgdma_standard_descriptor MSGDMA_DESC;
 
@@ -138,7 +134,7 @@ int main() {
     alt_u32 divisor = alt_timestamp_freq()/1000000; // to get time in µsec
     alt_u64 time;
     alt_u64 lastactivitytime[6];
-    alt_u64 time_start, time_stop;
+    //alt_u64 time_start, time_stop;
 
     int uart_fd[6];
     uart_fd[0] = open(FIFOED_AVALON_UART_0_NAME, O_RDWR | O_NONBLOCK);
@@ -227,7 +223,7 @@ int main() {
 
 	if (err != 0)
 	{
-		printf("RXINFO xfer: Async DMA err %d\n", err);
+		//printf("RXINFO xfer: Async DMA err %d\n", err);
 	}
 
     // Just a little LED animation to indicate that NIOS processor is alive and running
@@ -251,16 +247,6 @@ int main() {
     while (true) {
 
     	msg_received = false;
-
-    	loop_index++;
-
-    	/*
-    	if (loop_index % 3000 == 0)
-    	{
-    		//printf("loop:%ld\n", loop_index);
-    		//printf("*\n");
-    	}
-    	*/
 
     	// Scan all UART FIFOs for data
     	for (int uart_index=0; uart_index<6; uart_index++)
@@ -294,34 +280,36 @@ int main() {
     				lastactivitytime[uart_index] = time;
 
     				// DEBUG
+    				/*
     				printf("[%ld] NB read UART%d: %d\n", loop_index, uart_index, nb_read);
     				for (int i=0; i<4; i++)
     				{
     					printf("Char %d: %u\n", i, RX[uart_index][i]);
     				}
+    				*/
 
     				// DEBUG
-    				printf("Timestamp: %llu\n", time);
+    				//printf("Timestamp: %llu\n", time);
 
     				//DEBUG
     				alt_u64* rx_timestamp = (alt_u64*)(&RX[uart_index][UART_RXinfo.RXFrameSize[uart_index]]);
-    				printf("Uncorrected timestamp from driver: %llu\n", *rx_timestamp);
+    				//printf("Uncorrected timestamp from driver: %llu\n", *rx_timestamp);
 
     				// Need to compute the timestamp corresponding to the arrival of the first byte in the message,
     				// so subtract the time of the message data bytes reception, plus the inter-message gap detection time
     				*rx_timestamp -= (unsigned long long)(nb_read + channelRXGapDetectionChars[uart_index])*8*1000000 / channelRXBaudRate[uart_index];
-    				printf("Timestamp from driver (corrected: %llu\n", *rx_timestamp);
+    				//printf("Timestamp from driver (corrected: %llu\n", *rx_timestamp);
 
     				// fill-in the nb of bytes in frame, after the timestamp
     				unsigned int* frame_length_field = (unsigned int*)&RX[uart_index][4096+TIMESTAMP_SIZE];
     				*frame_length_field = nb_read;
 
     				// DEBUG
-    				int level;
-    				level = uart_getRXFifoLevel(uart_index);
-    				printf("FIFO level: %d\n", level);
+    				//int level;
+    				//level = uart_getRXFifoLevel(uart_index);
+    				//printf("FIFO level: %d\n", level);
 
-    				time_start = alt_timestamp() / divisor;
+    				//time_start = alt_timestamp() / divisor;
 
     				// Push the received data to HPS DDR3 memory using DMA
     				if (MSGDMADev != NULL)
@@ -340,9 +328,9 @@ int main() {
     					if (err != 0)
     					{
     						// DEBUG
-    						printf("Async DMA err %d\n", err);
+    						//printf("Async DMA err %d\n", err);
     					}
-        				printf("DONE Writing at address 0x%p\n", UART_RXinfo.RXNextFrameAddress[uart_index]);
+        				//printf("DONE Writing at address 0x%p\n", UART_RXinfo.RXNextFrameAddress[uart_index]);
 
     					// Move destination pointer for next transfer.
     					UART_RXinfo.RXNextFrameAddress[uart_index] += UART_RXinfo.RXFrameSize[uart_index] + UART_RXinfo.RXTimeStampSize[uart_index]+ UART_RXinfo.RXFrameLengthSize[uart_index];
@@ -351,15 +339,13 @@ int main() {
     					if (UART_RXinfo.RXNextFrameAddress[uart_index] >= UART_RXinfo.RXTopAddress[uart_index] - UART_RXinfo.RXFrameSize[uart_index] - UART_RXinfo.RXTimeStampSize[uart_index] - UART_RXinfo.RXFrameLengthSize[uart_index])
     						UART_RXinfo.RXNextFrameAddress[uart_index] = UART_RXinfo.RXBaseAddress[uart_index];
 
-    					printf("Next frame will go at address 0x%p\n", UART_RXinfo.RXNextFrameAddress[uart_index]);
+    					//printf("Next frame will go at address 0x%p\n", UART_RXinfo.RXNextFrameAddress[uart_index]);
     				}
-    				else
-    					printf("ERROR: MSGDMADev is NULL!\n");
 
-    				time_stop = alt_timestamp() / divisor;
+    				//time_stop = alt_timestamp() / divisor;
 
     				// DEBUG
-    				printf("Timestamp delta: %lld\n", time_stop-time_start);
+    				//printf("Timestamp delta: %lld\n", time_stop-time_start);
 
     				/*
 				printf("Sending data back over UART0...\n");
@@ -375,7 +361,7 @@ int main() {
         // If anything was received on any channel, refresh UART info struct in DDR for HPS to catch up
         if (msg_received && MSGDMADev != NULL)
         {
-        	printf("Refreshing UART INFO in DDR\n");
+        	//printf("Refreshing UART INFO in DDR\n");
 
 			int err;
 			err= alt_msgdma_construct_standard_mm_to_mm_descriptor(
@@ -390,7 +376,7 @@ int main() {
 
 			if (err != 0)
 			{
-				printf("Async DMA err %d\n", err);
+				//printf("Async DMA err %d\n", err);
 			}
         }
     }

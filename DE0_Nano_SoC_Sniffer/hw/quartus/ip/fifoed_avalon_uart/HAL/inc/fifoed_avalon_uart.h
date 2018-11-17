@@ -113,14 +113,21 @@ extern "C"
  * pending transmit and receive data. This value must be a power of two.
  */
 
-#define FIFOED_AVALON_UART_BUF_LEN (4096)
+//#define FIFOED_AVALON_UART_BUF_LEN (4096)
+#define FIFOED_AVALON_UART_BUF_LEN (64)
 
-/*
+  /*
  * FIFOED_AVALON_UART_BUF_MSK is used as an internal convenience for detecting
  * the end of the arrays used to implement the transmit and receive buffers.
  */
 
 #define FIFOED_AVALON_UART_BUF_MSK (FIFOED_AVALON_UART_BUF_LEN - 1)
+
+// Assume a min frame size of 16 bytes, and figure out how many of these the buffer can hold
+//#define MAX_NB_FRAMES_BUFFERED FIFOED_AVALON_UART_BUF_LEN/16
+#define MAX_NB_FRAMES_BUFFERED 8
+#define MAX_NB_FRAMES_BUFFERED_MASK (MAX_NB_FRAMES_BUFFERED-1)
+
 
 /*
  * This is somewhat of an ugly hack, but we need some mechanism for
@@ -203,8 +210,21 @@ typedef struct  fifoed_avalon_uart_state_s
                                      * write buffer in multi-threaded mode */
   alt_u8           rx_buf[FIFOED_AVALON_UART_BUF_LEN]; /* The receive buffer */
   alt_u8           tx_buf[FIFOED_AVALON_UART_BUF_LEN]; /* The transmit buffer */
-  alt_u64          rx_timestamp; /* timestamp of first byte of received message */
+  alt_u64          rx_timestamp[MAX_NB_FRAMES_BUFFERED]; /* timestamp of first byte of received message */
+  alt_u16 		   rx_framestart_offset[MAX_NB_FRAMES_BUFFERED];
+  alt_u16 		   rx_frame_size[MAX_NB_FRAMES_BUFFERED];
+  alt_u16 		   rx_frame_readindex;
+  alt_u16          rx_frame_writeindex;
 } fifoed_avalon_uart_state;
+
+typedef struct  fifoed_avalon_uart_snaphot_s
+{
+  fifoed_avalon_uart_state* ptr;
+  alt_u16 rx_framestart_index;
+  alt_u16 rx_framecount;
+} fifoed_avalon_uart_snaphot;
+
+
 //#endif
 /*
  * Conditionally define the data structures used to process ioctl requests.

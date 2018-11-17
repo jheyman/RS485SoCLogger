@@ -33,12 +33,15 @@ void setup()
 } 
 
 #define INTERFRAME_DELAY_MILLISECONDS 2
-#define FRAME_SIZE 256
+#define FRAME_SIZE 10
 #define NB_FRAMES_SENT_UPON_TRIGGER 2
   
 void loop()
 {
   int trig, button;
+
+  char val = loop_index%256;
+  
   do {
     button = digitalRead(BUTTON_PIN);
     trig = digitalRead(TRIG_PIN);
@@ -102,7 +105,7 @@ void loop()
      for(unsigned int i=0; i < FRAME_SIZE;i++)
      {
       //Serial.write(i%256);
-      Serial.write(66);
+      Serial.write(val);
      }
    
     delay(INTERFRAME_DELAY_MILLISECONDS);
@@ -123,6 +126,7 @@ void loop()
 
   // poor man's debouncing
   delay(200);
+  loop_index++;
    
 }
 

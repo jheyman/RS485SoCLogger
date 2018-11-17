@@ -4,7 +4,7 @@
  * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'soc_system'
  * SOPC Builder design path: /home/etabli/DE0_Nano_SoC_Sniffer/hw/quartus/soc_system.sopcinfo
  *
- * Generated: Sun Nov 04 18:52:52 CET 2018
+ * Generated: Mon Nov 12 21:19:11 CET 2018
  */
 
 /*
@@ -790,7 +790,7 @@
 #define SYSID_IRQ_INTERRUPT_CONTROLLER_ID -1
 #define SYSID_NAME "/dev/sysid"
 #define SYSID_SPAN 8
-#define SYSID_TIMESTAMP 1541350974
+#define SYSID_TIMESTAMP 1541962157
 #define SYSID_TYPE "altera_avalon_sysid_qsys"
 
 

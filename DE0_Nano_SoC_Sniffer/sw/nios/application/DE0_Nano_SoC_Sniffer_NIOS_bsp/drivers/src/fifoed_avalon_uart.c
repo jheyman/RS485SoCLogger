@@ -226,130 +226,44 @@ int fifoed_avalon_uart_write (fifoed_avalon_uart_state* sp, const char* ptr, int
 
 int fifoed_avalon_uart_read (fifoed_avalon_uart_state* sp, char* ptr, int len, int flags)
 {
-  alt_irq_context context;
-  int             block;
- // alt_u32         next; //9.3.1 patch
+	alt_irq_context context;
 
-  int count                = 0;
+	if (sp->rx_frame_readindex == sp->rx_frame_writeindex)
+	{
+		return 0;
+	}
+	else
+	{
+		fifoed_avalon_uart_snaphot* snap = (fifoed_avalon_uart_snaphot*)ptr;
+		snap->ptr = sp;
+		if (sp->rx_frame_writeindex > sp->rx_frame_readindex)
+		{
+			snap->rx_framecount = sp->rx_frame_writeindex - sp->rx_frame_readindex;
+		}
+		else // if write_index has rolled over index buffer
+		{
+			snap->rx_framecount = (MAX_NB_FRAMES_BUFFERED- sp->rx_frame_readindex) + sp->rx_frame_writeindex;
+		}
 
-  // Compute pointer to store the 64-bit timestamp after data buffer.
-  // Obviously, assumes that 8 extra bytes have been allocated for this there...
-  char *timestamp_address = ptr+len;
+		snap->rx_framestart_index = sp->rx_frame_readindex;
 
-  /* 
-   * Construct a flag to indicate whether the device is being accessed in
-   * blocking or non-blocking mode.
-   */
+		// move pointers for next read call
+		sp->rx_frame_readindex = sp->rx_frame_writeindex;
+		sp->rx_start = sp->rx_end;
 
-  block = !(flags & O_NONBLOCK);
+		/*
+		 * Ensure that interrupts are enabled, so that the circular buffer can
+		 * re-fill.
+		 */
 
-  /*
-   * When running in a multi threaded environment, obtain the "read_lock"
-   * semaphore. This ensures that reading from the device is thread-safe.
-   */
+		context = alt_irq_disable_all ();
+		sp->ctrl |= FIFOED_AVALON_UART_CONTROL_RRDY_MSK;
+		IOWR_FIFOED_AVALON_UART_CONTROL(sp->base, sp->ctrl);
+		alt_irq_enable_all (context);
 
-  ALT_SEM_PEND (sp->read_lock, 0);
-
-  /*
-   * Calculate which slot in the circular buffer is the next one to read
-   * data from.
-   */
-
-//  next = (sp->rx_start + 1) & FIFOED_AVALON_UART_BUF_MSK; //9.3.1 patch
-
-  /*
-   * Loop, copying data from the circular buffer to the destination address
-   * supplied in "ptr". This loop is terminated when the required number of
-   * bytes have been read. If the circular buffer is empty, and no data has
-   * been read, then the loop will block (when in blocking mode).
-   *
-   * If the circular buffer is empty, and some data has already been 
-   * transferred, or the device is being accessed in non-blocking mode, then
-   * the loop terminates without necessarily reading all the requested data.
-   */
-
-  do
-  {
-    /*
-     * Read the required amount of data, until the circular buffer runs
-     * empty
-     */
-
-    while ((count < len) && (sp->rx_start != sp->rx_end))
-    {
-      count++;
-      *ptr++ = sp->rx_buf[sp->rx_start];
-      
-  //  9.3.1 patch  sp->rx_start = (++sp->rx_start) & FIFOED_AVALON_UART_BUF_MSK;
-      ++sp->rx_start;
-      sp->rx_start = sp->rx_start & FIFOED_AVALON_UART_BUF_MSK; 
-
-    }
-
-    /*
-     * If no data has been transferred, the circular buffer is empty, and
-     * this is not a non-blocking access, block waiting for data to arrive.
-     */
-
-    if (!count && (sp->rx_start == sp->rx_end))
-    {
-      if (!block)
-      {
-        /* Set errno to indicate the reason we're not returning any data */
-
-        ALT_ERRNO = EWOULDBLOCK;
-        break;
-      }
-      else
-      {
-       /* Block waiting for some data to arrive */
-
-       /* First, ensure read interrupts are enabled to avoid deadlock */
-
-       context = alt_irq_disable_all ();
-       sp->ctrl |= FIFOED_AVALON_UART_CONTROL_RRDY_MSK;
-       IOWR_FIFOED_AVALON_UART_CONTROL(sp->base, sp->ctrl);
-       alt_irq_enable_all (context);
-
-       /*
-        * When running in a multi-threaded mode, we pend on the read event 
-        * flag set in the interrupt service routine. This avoids wasting CPU
-        * cycles waiting in this thread, when we could be doing something more 
-        * profitable elsewhere.
-        */
-
-       ALT_FLAG_PEND (sp->events,
-                      ALT_UART_READ_RDY,
-                      OS_FLAG_WAIT_SET_ANY + OS_FLAG_CONSUME,
-                      0);
-      }
-    }
-  }
-  while (!count && len);
-
-  /*
-   * Now that access to the circular buffer is complete, release the read
-   * semaphore so that other threads can access the buffer.
-   */
-
-  ALT_SEM_POST (sp->read_lock);
-
-  /*
-   * Ensure that interrupts are enabled, so that the circular buffer can
-   * re-fill.
-   */
-
-  context = alt_irq_disable_all ();
-  sp->ctrl |= FIFOED_AVALON_UART_CONTROL_RRDY_MSK;
-  IOWR_FIFOED_AVALON_UART_CONTROL(sp->base, sp->ctrl);
-  alt_irq_enable_all (context);
-
-  // Append the end of frame timestamp after the data buffer
-  // Obviously, assumes that 8 extra bytes have been allocated for this
-  *(alt_u64*)timestamp_address = sp->rx_timestamp;
-
-  /* Return the number of bytes read */
-  return count;
+		/* return number of FRAMES to read from buffer */
+		return snap->rx_framecount;
+	}
 }
 
 /*
@@ -479,68 +393,60 @@ int fifoed_avalon_uart_write (fifoed_avalon_uart_state* sp, const char* ptr, int
 /*
  * fifoed_avalon_uart_rxirq() is called by fifoed_avalon_uart_irq() to process a
  * receive interrupt. It transfers the incoming character into the receive
- * circular buffer, and sets the apropriate flags to indicate that there is
+ * circular buffer, and sets the appropriate flags to indicate that there is
  * dat ready to be processed.
  */
+
+
+#include <stdio.h>
 
 static void fifoed_avalon_uart_rxirq (fifoed_avalon_uart_state* sp,
                                    alt_u32              status)
 {
-  alt_u32 next;
+
+
+
+
+	printf("!");
+
+
+
+
 
   // capture current high-resolution timestamp.
   // this will correspond to the time of end of the received message + idle timeout gap
   alt_u32 divisor = alt_timestamp_freq()/1000000;
-  sp->rx_timestamp = alt_timestamp() / divisor;
+  sp->rx_timestamp[sp->rx_frame_writeindex] = alt_timestamp() / divisor;
 
-  /*
-   * In a multi-threaded environment, set the read event flag to indicate
-   * that there is data ready. This is only done if the circular buffer was
-   * previously empty.
-   */
-// allow to read as many as it can.
-// (KN) fix the erronous status check (should be bit-wise AND rather than logical AND)
-// while ( IORD_FIFOED_AVALON_UART_STATUS(sp->base) && FIFOED_AVALON_UART_STATUS_RRDY_MSK){
-while ( IORD_FIFOED_AVALON_UART_STATUS(sp->base) & FIFOED_AVALON_UART_STATUS_RRDY_MSK){
-  if (sp->rx_end == sp->rx_start)
-  {
-    ALT_FLAG_POST (sp->events, ALT_UART_READ_RDY, OS_FLAG_SET);
+  // memorize where first byte of this new frame will go in the buffer
+  sp->rx_framestart_offset[sp->rx_frame_writeindex] = sp->rx_end;
+
+  // reset frame size
+  sp->rx_frame_size[sp->rx_frame_writeindex] = 0;
+
+  // allow to read as many as it can.
+  while ( IORD_FIFOED_AVALON_UART_STATUS(sp->base) & FIFOED_AVALON_UART_STATUS_RRDY_MSK){
+
+	  /* Transfer data from the device to the circular buffer */
+	  sp->rx_buf[sp->rx_end] = IORD_FIFOED_AVALON_UART_RXDATA(sp->base);
+	  sp->rx_frame_size[sp->rx_frame_writeindex]++;
+
+	  /* Determine which slot to use next in the circular buffer */
+	  sp->rx_end = (sp->rx_end + 1) & FIFOED_AVALON_UART_BUF_MSK;
+
+	  /*
+	   * If the circular buffer was full, disable interrupts. Interrupts will be
+	   * re-enabled when data is removed from the buffer.
+	   */
+	  if (sp->rx_end == sp->rx_start)
+	  {
+		  sp->ctrl &= ~FIFOED_AVALON_UART_CONTROL_RRDY_MSK;
+		  IOWR_FIFOED_AVALON_UART_CONTROL(sp->base, sp->ctrl);
+	  }
   }
 
-  /* Determine which slot to use next in the circular buffer */
-
-  next = (sp->rx_end + 1) & FIFOED_AVALON_UART_BUF_MSK;
-
-  /* Transfer data from the device to the circular buffer */
-
-  sp->rx_buf[sp->rx_end] = IORD_FIFOED_AVALON_UART_RXDATA(sp->base);
-
-  /* If there was an error, discard the data */
-
-// i have left this in tack but it is not necissarily right.
-// next version of the fifo will track the errors in the fifo. 
-
-  if (status & (FIFOED_AVALON_UART_STATUS_PE_MSK | 
-                  FIFOED_AVALON_UART_STATUS_FE_MSK))
-  {
-    return;
-  }
-
-  sp->rx_end = next;
-
-  next = (sp->rx_end + 1) & FIFOED_AVALON_UART_BUF_MSK;
-
-  /*
-   * If the cicular buffer was full, disable interrupts. Interrupts will be
-   * re-enabled when data is removed from the buffer.
-   */
-
-  if (next == sp->rx_start)
-  {
-    sp->ctrl &= ~FIFOED_AVALON_UART_CONTROL_RRDY_MSK;
-    IOWR_FIFOED_AVALON_UART_CONTROL(sp->base, sp->ctrl);
-  }   
-}
+  // all pending bytes have been read: this is the end of this frame, move frame index (wrapping as necessary)
+  sp->rx_frame_writeindex = (sp->rx_frame_writeindex+1) & MAX_NB_FRAMES_BUFFERED_MASK;
 }
 /*
  * fifoed_avalon_uart_txirq() is called by fifoed_avalon_uart_irq() to process a
@@ -691,6 +597,12 @@ void fifoed_avalon_uart_init (fifoed_avalon_uart_state* sp,alt_u32 irq_controlle
 {
   void* base = sp->base;
   int error;
+
+  // Initialize indexes / buffer pointers
+  sp->rx_frame_readindex = 0;
+  sp->rx_frame_writeindex = 0;
+  sp->rx_start = 0;
+  sp->rx_end = 0;
 
   /* 
    * Initialise the read and write flags and the semaphores used to 

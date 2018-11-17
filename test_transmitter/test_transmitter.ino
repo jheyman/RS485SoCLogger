@@ -32,15 +32,16 @@ void setup()
   sendWrongBuf[30] = 255;
 } 
 
-#define INTERFRAME_DELAY_MILLISECONDS 2
-#define FRAME_SIZE 10
-#define NB_FRAMES_SENT_UPON_TRIGGER 2
-  
+#define INTERFRAME_DELAY_MILLISECONDS 1
+#define FRAME_SIZE 256
+#define NB_FRAMES_SENT_UPON_TRIGGER 1
+
+unsigned char val=0;
+
 void loop()
 {
   int trig, button;
 
-  char val = loop_index%256;
   
   do {
     button = digitalRead(BUTTON_PIN);
@@ -102,10 +103,14 @@ void loop()
      }  
      */
 
+     //char val = loop_index%256;
+     //loop_index++;
+
      for(unsigned int i=0; i < FRAME_SIZE;i++)
      {
       //Serial.write(i%256);
       Serial.write(val);
+      val++;
      }
    
     delay(INTERFRAME_DELAY_MILLISECONDS);
@@ -126,7 +131,6 @@ void loop()
 
   // poor man's debouncing
   delay(200);
-  loop_index++;
    
 }
 

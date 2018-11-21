@@ -224,6 +224,9 @@ int fifoed_avalon_uart_write (fifoed_avalon_uart_state* sp, const char* ptr, int
  * for copying data from the device into this buffer.
  */
 
+
+#include <stdio.h>
+
 int fifoed_avalon_uart_read (fifoed_avalon_uart_state* sp, char* ptr, int len, int flags)
 {
 	alt_irq_context context;
@@ -234,6 +237,13 @@ int fifoed_avalon_uart_read (fifoed_avalon_uart_state* sp, char* ptr, int len, i
 	}
 	else
 	{
+
+
+
+	//	printf("TS end=%llu\n",sp->rx_timestamp_DEBUG[sp->rx_frame_readindex]);
+	//	printf("RX FIFO level=%lu\n", sp->rx_fifolevel_DEBUG[sp->rx_frame_readindex]);
+
+
 		fifoed_avalon_uart_snaphot* snap = (fifoed_avalon_uart_snaphot*)ptr;
 		snap->ptr = sp;
 		if (sp->rx_frame_writeindex > sp->rx_frame_readindex)
@@ -255,12 +265,11 @@ int fifoed_avalon_uart_read (fifoed_avalon_uart_state* sp, char* ptr, int len, i
 		 * Ensure that interrupts are enabled, so that the circular buffer can
 		 * re-fill.
 		 */
-
-		context = alt_irq_disable_all ();
-		sp->ctrl |= FIFOED_AVALON_UART_CONTROL_RRDY_MSK;
+/* DEBUG DEBUG DEBUG
+  		sp->ctrl |= FIFOED_AVALON_UART_CONTROL_RRDY_MSK;
 		IOWR_FIFOED_AVALON_UART_CONTROL(sp->base, sp->ctrl);
 		alt_irq_enable_all (context);
-
+*/
 		/* return number of FRAMES to read from buffer */
 		return snap->rx_framecount;
 	}
@@ -397,19 +406,12 @@ int fifoed_avalon_uart_write (fifoed_avalon_uart_state* sp, const char* ptr, int
  * dat ready to be processed.
  */
 
-
-#include <stdio.h>
-
 static void fifoed_avalon_uart_rxirq (fifoed_avalon_uart_state* sp,
                                    alt_u32              status)
 {
 
-
-
-
-	printf("!");
-
-
+	// DEBUG DEBUG DEBUG
+	//sp->rx_fifolevel_DEBUG[sp->rx_frame_writeindex] = IORD_FIFOED_AVALON_UART_RX_FIFO_USED(sp->base);
 
 
 
@@ -424,29 +426,48 @@ static void fifoed_avalon_uart_rxirq (fifoed_avalon_uart_state* sp,
   // reset frame size
   sp->rx_frame_size[sp->rx_frame_writeindex] = 0;
 
+  //volatile alt_u32 index = sp->rx_end;
+  //unsigned char* dest = &sp->rx_buf[index];
+  //void* src = sp->base;
+
   // allow to read as many as it can.
   while ( IORD_FIFOED_AVALON_UART_STATUS(sp->base) & FIFOED_AVALON_UART_STATUS_RRDY_MSK){
 
 	  /* Transfer data from the device to the circular buffer */
 	  sp->rx_buf[sp->rx_end] = IORD_FIFOED_AVALON_UART_RXDATA(sp->base);
-	  sp->rx_frame_size[sp->rx_frame_writeindex]++;
+	  //dest[index] = IORD_FIFOED_AVALON_UART_RXDATA(src);
 
 	  /* Determine which slot to use next in the circular buffer */
 	  sp->rx_end = (sp->rx_end + 1) & FIFOED_AVALON_UART_BUF_MSK;
+	  //index = (index +1) & FIFOED_AVALON_UART_BUF_MSK;
 
 	  /*
 	   * If the circular buffer was full, disable interrupts. Interrupts will be
 	   * re-enabled when data is removed from the buffer.
 	   */
+/*
 	  if (sp->rx_end == sp->rx_start)
 	  {
 		  sp->ctrl &= ~FIFOED_AVALON_UART_CONTROL_RRDY_MSK;
 		  IOWR_FIFOED_AVALON_UART_CONTROL(sp->base, sp->ctrl);
 	  }
+	  */
   }
+  //sp->rx_end = index;
+  //sp->rx_timestamp_DEBUG[sp->rx_frame_writeindex] = alt_timestamp() / divisor;
+  sp->rx_frame_size[sp->rx_frame_writeindex] = sp->rx_end - sp->rx_framestart_offset[sp->rx_frame_writeindex];
+
+
+  // DEBUG
+
+
 
   // all pending bytes have been read: this is the end of this frame, move frame index (wrapping as necessary)
   sp->rx_frame_writeindex = (sp->rx_frame_writeindex+1) & MAX_NB_FRAMES_BUFFERED_MASK;
+
+
+
+
 }
 /*
  * fifoed_avalon_uart_txirq() is called by fifoed_avalon_uart_irq() to process a
@@ -617,9 +638,12 @@ void fifoed_avalon_uart_init (fifoed_avalon_uart_state* sp,alt_u32 irq_controlle
   if (!error)
   {
     /* enable interrupts at the device */
+	// Note : let's not activate FIFOED_AVALON_UART_CONTROL_RRDY_MSK, because
+	// even though the FIFOed Avalon UART IP says the RRDY notification is disabled when RX threshold is set to 1,
+	// it does not seem to be. The only interrupt we need anyway is the GAP-detection interrupt.
 
     sp->ctrl = FIFOED_AVALON_UART_CONTROL_RTS_MSK  |
-                FIFOED_AVALON_UART_CONTROL_RRDY_MSK |
+				FIFOED_AVALON_UART_CONTROL_GAP_MSK |
                 FIFOED_AVALON_UART_CONTROL_DCTS_MSK;
 
     IOWR_FIFOED_AVALON_UART_CONTROL(base, sp->ctrl);
@@ -735,3 +759,6 @@ int fifoed_avalon_uart_ioctl (fifoed_avalon_uart_state* sp, int req, void* arg)
 #endif /* FIFOED_AVALON_UART_USE_IOCTL */
 
 #endif /* defined ALT_USE_SMALL_DRIVERS || FIFOED_AVALON_UART_SMALL */
+
+
+

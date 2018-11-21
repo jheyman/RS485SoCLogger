@@ -290,10 +290,7 @@ int main() {
 
 					UART_RXFrameInfo frameInfo[MAX_NB_FRAMES_BUFFERED];
 
-
-					int nbFrames = tmp.rx_framecount < 2 ? tmp.rx_framecount: 2;
-
-					for (unsigned int i=0; i < /*tmp.rx_framecount*/nbFrames; i++)
+					for (unsigned int i=0; i < tmp.rx_framecount; i++)
 					{
 						//DEBUG
 						printf("Dealing with frameIndex=%u\n", frameIndex);
@@ -302,6 +299,12 @@ int main() {
 
 						// DEBUG
 						printf ("Frame %u: length=%lu\n", i, frameLength);
+
+						for (int kk=0; kk<16;kk++)
+						{
+							printf("Ox%X ", state->rx_buf[state->rx_framestart_offset[frameIndex]+kk]);
+						}
+						printf("\n");
 
 						// Push the received data to HPS DDR3 memory using DMA
 						if (MSGDMADev != NULL)

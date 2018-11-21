@@ -28,7 +28,7 @@ entity DE0_Nano_SoC_top_level is
      -- SW               : in    std_logic_vector(3 downto 0);
 
         -- GPIO_0
-     -- GPIO_0           : inout std_logic_vector(35 downto 0);
+        --GPIO_0           : inout std_logic_vector(35 downto 0);
 
         -- GPIO_1
         GPIO_1           : inout std_logic_vector(35 downto 0);

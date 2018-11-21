@@ -113,8 +113,8 @@ extern "C"
  * pending transmit and receive data. This value must be a power of two.
  */
 
-//#define FIFOED_AVALON_UART_BUF_LEN (4096)
-#define FIFOED_AVALON_UART_BUF_LEN (64)
+#define FIFOED_AVALON_UART_BUF_LEN (4096)
+//#define FIFOED_AVALON_UART_BUF_LEN (64)
 
   /*
  * FIFOED_AVALON_UART_BUF_MSK is used as an internal convenience for detecting
@@ -374,3 +374,5 @@ typedef struct  fifoed_avalon_uart_snaphot_s
 #endif /* __cplusplus */
 
 #endif /* __FIFOED_AVALON_UART_H__ */
+
+

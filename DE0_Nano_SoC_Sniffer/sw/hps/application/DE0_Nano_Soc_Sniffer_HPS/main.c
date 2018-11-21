@@ -273,7 +273,7 @@ unsigned int MaxFrameOffset[6];
 unsigned int topGap[6];
 
 int main() {
-	unsigned int i,k;
+	unsigned int i,j,k;
 	printf("\e[2J");
     printf("DE0-Nano-SoC Sniffer HPS-side compiled %s %s\n", __DATE__, __TIME__);
 
@@ -417,14 +417,24 @@ int main() {
 
         	    	char* addr;
         	    	addr = frameAddr;
-        	    	for (k=0;k<frameLength;k++)
+        	    	for (j=0;j<frameLength/32;j++)
+        	    	{
+        	    		for (k=0;k<32;k++)
+        	    		{
+        	    			printf("%02X ", *addr);
+        	    			addr++;
+        	    		}
+
+        	    		printf("\n");
+        	    	}
+        	    	for (k=0;k<frameLength%32;k++)
         	    	{
         	    		printf("%02X ", *addr);
         	    		addr++;
         	    	}
-        	    	printf("\n");
+    	    		printf("\n");
 
-
+/*
         			char bufToSend[1500];
 
         			sprintf(bufToSend, "%015lu:", *(unsigned long*)timestampAddr);
@@ -437,7 +447,7 @@ int main() {
         		    if (sendto(fd, bufToSend, 16+5+3+5+frameLength, 0, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0){
         		        perror("cannot send message");
         		    }
-
+*/
         			//printf("pushed one frame from channel %d\n", i);
 
         			ethMsgIndex++ ;

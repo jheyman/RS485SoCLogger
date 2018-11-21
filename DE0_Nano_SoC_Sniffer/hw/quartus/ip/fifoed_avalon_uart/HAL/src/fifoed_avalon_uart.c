@@ -255,12 +255,11 @@ int fifoed_avalon_uart_read (fifoed_avalon_uart_state* sp, char* ptr, int len, i
 		 * Ensure that interrupts are enabled, so that the circular buffer can
 		 * re-fill.
 		 */
-
-		context = alt_irq_disable_all ();
-		sp->ctrl |= FIFOED_AVALON_UART_CONTROL_RRDY_MSK;
+/* DEBUG DEBUG DEBUG
+  		sp->ctrl |= FIFOED_AVALON_UART_CONTROL_RRDY_MSK;
 		IOWR_FIFOED_AVALON_UART_CONTROL(sp->base, sp->ctrl);
 		alt_irq_enable_all (context);
-
+*/
 		/* return number of FRAMES to read from buffer */
 		return snap->rx_framecount;
 	}
@@ -397,22 +396,9 @@ int fifoed_avalon_uart_write (fifoed_avalon_uart_state* sp, const char* ptr, int
  * dat ready to be processed.
  */
 
-
-#include <stdio.h>
-
 static void fifoed_avalon_uart_rxirq (fifoed_avalon_uart_state* sp,
                                    alt_u32              status)
 {
-
-
-
-
-	printf("!");
-
-
-
-
-
   // capture current high-resolution timestamp.
   // this will correspond to the time of end of the received message + idle timeout gap
   alt_u32 divisor = alt_timestamp_freq()/1000000;
@@ -617,9 +603,12 @@ void fifoed_avalon_uart_init (fifoed_avalon_uart_state* sp,alt_u32 irq_controlle
   if (!error)
   {
     /* enable interrupts at the device */
+	// Note : let's not activate FIFOED_AVALON_UART_CONTROL_RRDY_MSK, because
+	// even though the FIFOed Avalon UART IP says the RRDY notification is disabled when RX threshold is set to 1,
+	// it does not seem to be. The only interrupt we need anyway is the GAP-detection interrupt.
 
     sp->ctrl = FIFOED_AVALON_UART_CONTROL_RTS_MSK  |
-                FIFOED_AVALON_UART_CONTROL_RRDY_MSK |
+				FIFOED_AVALON_UART_CONTROL_GAP_MSK |
                 FIFOED_AVALON_UART_CONTROL_DCTS_MSK;
 
     IOWR_FIFOED_AVALON_UART_CONTROL(base, sp->ctrl);
@@ -735,3 +724,6 @@ int fifoed_avalon_uart_ioctl (fifoed_avalon_uart_state* sp, int req, void* arg)
 #endif /* FIFOED_AVALON_UART_USE_IOCTL */
 
 #endif /* defined ALT_USE_SMALL_DRIVERS || FIFOED_AVALON_UART_SMALL */
+
+
+

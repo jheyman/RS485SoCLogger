@@ -32,9 +32,9 @@ void setup()
   sendWrongBuf[30] = 255;
 } 
 
-#define INTERFRAME_DELAY_MILLISECONDS 1
-#define FRAME_SIZE 256
-#define NB_FRAMES_SENT_UPON_TRIGGER 1
+#define INTERFRAME_DELAY_MICROSECONDS 5000
+#define FRAME_SIZE 64
+#define NB_FRAMES_SENT_UPON_TRIGGER 3
 
 unsigned char val=0;
 
@@ -113,7 +113,7 @@ void loop()
       val++;
      }
    
-    delay(INTERFRAME_DELAY_MILLISECONDS);
+    delayMicroseconds(INTERFRAME_DELAY_MICROSECONDS);
   }
   // wait 1ms before release the enable: the last chars might still be in the RX buffer and not yet sent.
   delay(1);

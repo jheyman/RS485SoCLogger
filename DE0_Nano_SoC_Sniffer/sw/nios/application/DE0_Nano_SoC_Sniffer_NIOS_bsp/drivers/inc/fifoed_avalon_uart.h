@@ -113,8 +113,8 @@ extern "C"
  * pending transmit and receive data. This value must be a power of two.
  */
 
-//#define FIFOED_AVALON_UART_BUF_LEN (4096)
-#define FIFOED_AVALON_UART_BUF_LEN (64)
+#define FIFOED_AVALON_UART_BUF_LEN (4096)
+//#define FIFOED_AVALON_UART_BUF_LEN (64)
 
   /*
  * FIFOED_AVALON_UART_BUF_MSK is used as an internal convenience for detecting
@@ -211,6 +211,11 @@ typedef struct  fifoed_avalon_uart_state_s
   alt_u8           rx_buf[FIFOED_AVALON_UART_BUF_LEN]; /* The receive buffer */
   alt_u8           tx_buf[FIFOED_AVALON_UART_BUF_LEN]; /* The transmit buffer */
   alt_u64          rx_timestamp[MAX_NB_FRAMES_BUFFERED]; /* timestamp of first byte of received message */
+
+
+  alt_u64          rx_timestamp_DEBUG[MAX_NB_FRAMES_BUFFERED];
+  alt_u32          rx_fifolevel_DEBUG[MAX_NB_FRAMES_BUFFERED];
+
   alt_u16 		   rx_framestart_offset[MAX_NB_FRAMES_BUFFERED];
   alt_u16 		   rx_frame_size[MAX_NB_FRAMES_BUFFERED];
   alt_u16 		   rx_frame_readindex;
@@ -374,3 +379,5 @@ typedef struct  fifoed_avalon_uart_snaphot_s
 #endif /* __cplusplus */
 
 #endif /* __FIFOED_AVALON_UART_H__ */
+
+

@@ -220,6 +220,11 @@ typedef struct  fifoed_avalon_uart_state_s
   alt_u16 		   rx_frame_size[MAX_NB_FRAMES_BUFFERED];
   alt_u16 		   rx_frame_readindex;
   alt_u16          rx_frame_writeindex;
+
+  alt_u16          rx_latestFIFOsize;
+  alt_u64          rx_timestamp_DEBUG1;
+  alt_u64          rx_timestamp_DEBUG2;
+
 } fifoed_avalon_uart_state;
 
 typedef struct  fifoed_avalon_uart_snaphot_s

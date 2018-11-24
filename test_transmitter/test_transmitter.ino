@@ -32,7 +32,7 @@ void setup()
   sendWrongBuf[30] = 255;
 } 
 
-#define INTERFRAME_DELAY_MICROSECONDS 5000
+#define INTERFRAME_DELAY_MICROSECONDS 60
 #define FRAME_SIZE 64
 #define NB_FRAMES_SENT_UPON_TRIGGER 3
 
@@ -106,7 +106,7 @@ void loop()
      //char val = loop_index%256;
      //loop_index++;
 
-     for(unsigned int i=0; i < FRAME_SIZE;i++)
+     for(unsigned int i=0; i < FRAME_SIZE+frame;i++)
      {
       //Serial.write(i%256);
       Serial.write(val);

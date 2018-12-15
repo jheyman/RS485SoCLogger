@@ -4,7 +4,7 @@
  * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'soc_system'
  * SOPC Builder design path: /home/etabli/DE0_Nano_SoC_Sniffer/hw/quartus/soc_system.sopcinfo
  *
- * Generated: Fri Nov 02 09:11:01 CET 2018
+ * Generated: Sat Dec 08 19:41:04 CET 2018
  */
 
 /*
@@ -60,7 +60,6 @@
 
 #include "altera_nios2_gen2_irq.h"
 #include "altera_avalon_jtag_uart.h"
-#include "altera_avalon_sysid_qsys.h"
 #include "altera_avalon_timer.h"
 #include "altera_msgdma.h"
 #include "fifoed_avalon_uart.h"
@@ -71,15 +70,9 @@
 
 ALTERA_NIOS2_GEN2_IRQ_INSTANCE ( NIOS2_GEN2_0, nios2_gen2_0);
 ALTERA_AVALON_JTAG_UART_INSTANCE ( JTAG_UART_0, jtag_uart_0);
-ALTERA_AVALON_SYSID_QSYS_INSTANCE ( SYSID, sysid);
 ALTERA_AVALON_TIMER_INSTANCE ( TIMER_0, timer_0);
 ALTERA_MSGDMA_CSR_DESCRIPTOR_SLAVE_INSTANCE ( MSGDMA_0, MSGDMA_0_CSR, MSGDMA_0_DESCRIPTOR_SLAVE, msgdma_0);
 FIFOED_AVALON_UART_INSTANCE ( FIFOED_AVALON_UART_0, fifoed_avalon_uart_0);
-FIFOED_AVALON_UART_INSTANCE ( FIFOED_AVALON_UART_1, fifoed_avalon_uart_1);
-FIFOED_AVALON_UART_INSTANCE ( FIFOED_AVALON_UART_2, fifoed_avalon_uart_2);
-FIFOED_AVALON_UART_INSTANCE ( FIFOED_AVALON_UART_3, fifoed_avalon_uart_3);
-FIFOED_AVALON_UART_INSTANCE ( FIFOED_AVALON_UART_4, fifoed_avalon_uart_4);
-FIFOED_AVALON_UART_INSTANCE ( FIFOED_AVALON_UART_5, fifoed_avalon_uart_5);
 
 /*
  * Initialize the interrupt controller devices
@@ -104,12 +97,6 @@ void alt_sys_init( void )
 {
     ALTERA_AVALON_TIMER_INIT ( TIMER_0, timer_0);
     ALTERA_AVALON_JTAG_UART_INIT ( JTAG_UART_0, jtag_uart_0);
-    ALTERA_AVALON_SYSID_QSYS_INIT ( SYSID, sysid);
     ALTERA_MSGDMA_INIT ( MSGDMA_0, msgdma_0);
     FIFOED_AVALON_UART_INIT ( FIFOED_AVALON_UART_0, fifoed_avalon_uart_0);
-    FIFOED_AVALON_UART_INIT ( FIFOED_AVALON_UART_1, fifoed_avalon_uart_1);
-    FIFOED_AVALON_UART_INIT ( FIFOED_AVALON_UART_2, fifoed_avalon_uart_2);
-    FIFOED_AVALON_UART_INIT ( FIFOED_AVALON_UART_3, fifoed_avalon_uart_3);
-    FIFOED_AVALON_UART_INIT ( FIFOED_AVALON_UART_4, fifoed_avalon_uart_4);
-    FIFOED_AVALON_UART_INIT ( FIFOED_AVALON_UART_5, fifoed_avalon_uart_5);
 }

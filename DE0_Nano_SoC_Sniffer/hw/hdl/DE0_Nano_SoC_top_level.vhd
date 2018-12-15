@@ -155,7 +155,9 @@ architecture rtl of DE0_Nano_SoC_top_level is
             hps_0_io_hps_io_gpio_inst_GPIO61         : inout std_logic                     := 'X';
             
 				hps_fpga_leds_external_connection_export      : out   std_logic_vector(1 downto 0);
-            nios_activity_leds_external_connection_export : out   std_logic_vector(5 downto 0);
+            nios_activity_led_external_connection_0_export           : out   std_logic;
+				nios_activity_led_external_connection_1_export           : out   std_logic;
+				
             
 				reset_reset_n                                : in    std_logic                 := 'X'; 		
 
@@ -165,23 +167,8 @@ architecture rtl of DE0_Nano_SoC_top_level is
 				
             fifoed_avalon_uart_1_external_connection_rxd : in    std_logic                 := 'X';
             fifoed_avalon_uart_1_external_connection_txd : out   std_logic;
-            fifoed_avalon_uart_1_txenable_external_connection_export : out   std_logic := '0';
-            
-				fifoed_avalon_uart_2_external_connection_rxd : in    std_logic                 := 'X';
-            fifoed_avalon_uart_2_external_connection_txd : out   std_logic;
-            fifoed_avalon_uart_2_txenable_external_connection_export : out   std_logic := '0';
-            
-				fifoed_avalon_uart_3_external_connection_rxd : in    std_logic                 := 'X';
-            fifoed_avalon_uart_3_external_connection_txd : out   std_logic;
-            fifoed_avalon_uart_3_txenable_external_connection_export : out   std_logic := '0';
-            
-				fifoed_avalon_uart_4_external_connection_rxd : in    std_logic                 := 'X';
-            fifoed_avalon_uart_4_external_connection_txd : out   std_logic;
-            fifoed_avalon_uart_4_txenable_external_connection_export : out   std_logic := '0';
-            
-				fifoed_avalon_uart_5_external_connection_rxd : in    std_logic                 := 'X';
-            fifoed_avalon_uart_5_external_connection_txd : out   std_logic;        
-            fifoed_avalon_uart_5_txenable_external_connection_export : out   std_logic := '0'
+            fifoed_avalon_uart_1_txenable_external_connection_export : out   std_logic := '0'
+          
 		  );
     end component soc_system;
 
@@ -255,7 +242,9 @@ begin
         hps_0_io_hps_io_gpio_inst_GPIO61         => HPS_GSENSOR_INT,
 		  
         hps_fpga_leds_external_connection_export => LED(7 downto 6),
-        nios_activity_leds_external_connection_export     => LED(5 downto 0),
+		  nios_activity_led_external_connection_0_export => LED(0),  
+		  nios_activity_led_external_connection_1_export => LED(1),
+		  
         reset_reset_n                            => KEY_N(0),
 		  
         fifoed_avalon_uart_0_external_connection_rxd => GPIO_1(3),
@@ -264,22 +253,8 @@ begin
 	  
         fifoed_avalon_uart_1_external_connection_rxd => GPIO_1(6),
         fifoed_avalon_uart_1_external_connection_txd => GPIO_1(7),
-        fifoed_avalon_uart_1_txenable_external_connection_export => GPIO_1(9),
+        fifoed_avalon_uart_1_txenable_external_connection_export => GPIO_1(9)
 		  
-		  fifoed_avalon_uart_2_external_connection_rxd => GPIO_1(14),
-        fifoed_avalon_uart_2_external_connection_txd => GPIO_1(15),
-        fifoed_avalon_uart_2_txenable_external_connection_export => GPIO_1(17),
-		 
-        fifoed_avalon_uart_3_external_connection_rxd => GPIO_1(20),
-        fifoed_avalon_uart_3_external_connection_txd => GPIO_1(21),
-        fifoed_avalon_uart_3_txenable_external_connection_export => GPIO_1(23),
-  		  
-        fifoed_avalon_uart_4_external_connection_rxd => GPIO_1(26),
-        fifoed_avalon_uart_4_external_connection_txd => GPIO_1(27), 
-        fifoed_avalon_uart_4_txenable_external_connection_export => GPIO_1(29),
-		  
-        fifoed_avalon_uart_5_external_connection_rxd => GPIO_1(32),
-        fifoed_avalon_uart_5_external_connection_txd => GPIO_1(33),  
-        fifoed_avalon_uart_5_txenable_external_connection_export => GPIO_1(35)
+
 		  );
 end;

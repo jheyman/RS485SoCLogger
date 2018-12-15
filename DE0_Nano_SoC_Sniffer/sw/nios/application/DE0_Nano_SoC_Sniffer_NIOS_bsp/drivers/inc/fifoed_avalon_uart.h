@@ -123,9 +123,9 @@ extern "C"
 
 #define FIFOED_AVALON_UART_BUF_MSK (FIFOED_AVALON_UART_BUF_LEN - 1)
 
-// Assume a min frame size of 16 bytes, and figure out how many of these the buffer can hold
-//#define MAX_NB_FRAMES_BUFFERED FIFOED_AVALON_UART_BUF_LEN/16
-#define MAX_NB_FRAMES_BUFFERED 8
+// Assume a worst case of receiving many small frames of 16 bytes, and figure out how many of these the buffer can hold
+#define MAX_NB_FRAMES_BUFFERED FIFOED_AVALON_UART_BUF_LEN/16
+//#define MAX_NB_FRAMES_BUFFERED 8
 #define MAX_NB_FRAMES_BUFFERED_MASK (MAX_NB_FRAMES_BUFFERED-1)
 
 
@@ -211,20 +211,11 @@ typedef struct  fifoed_avalon_uart_state_s
   alt_u8           rx_buf[FIFOED_AVALON_UART_BUF_LEN]; /* The receive buffer */
   alt_u8           tx_buf[FIFOED_AVALON_UART_BUF_LEN]; /* The transmit buffer */
   alt_u64          rx_timestamp[MAX_NB_FRAMES_BUFFERED]; /* timestamp of first byte of received message */
-
-
-  alt_u64          rx_timestamp_DEBUG[MAX_NB_FRAMES_BUFFERED];
-  alt_u32          rx_fifolevel_DEBUG[MAX_NB_FRAMES_BUFFERED];
-
+  alt_u64          rx_DEBUGtimestamp[MAX_NB_FRAMES_BUFFERED];
   alt_u16 		   rx_framestart_offset[MAX_NB_FRAMES_BUFFERED];
   alt_u16 		   rx_frame_size[MAX_NB_FRAMES_BUFFERED];
   alt_u16 		   rx_frame_readindex;
   alt_u16          rx_frame_writeindex;
-
-  alt_u16          rx_latestFIFOsize;
-  alt_u64          rx_timestamp_DEBUG1;
-  alt_u64          rx_timestamp_DEBUG2;
-
 } fifoed_avalon_uart_state;
 
 typedef struct  fifoed_avalon_uart_snaphot_s
@@ -384,5 +375,6 @@ typedef struct  fifoed_avalon_uart_snaphot_s
 #endif /* __cplusplus */
 
 #endif /* __FIFOED_AVALON_UART_H__ */
+
 
 

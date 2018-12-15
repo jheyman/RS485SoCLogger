@@ -2,8 +2,8 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>Nov 18, 2018 10:49:03 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1542577743509</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>Dec 15, 2018 7:47:03 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1544899623297</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>/home/etabli/DE0_Nano_SoC_Sniffer/sw/nios/application/DE0_Nano_SoC_Sniffer_NIOS_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>/home/etabli/DE0_Nano_SoC_Sniffer/hw/quartus/soc_system.sopcinfo</SopcDesignFile>
@@ -923,118 +923,52 @@
                 <Group xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
         </Setting>
         <MemoryMap>
-                <slaveDescriptor>onchip_memory2_0</slaveDescriptor>
-                <addressRange>0x00000000 - 0x00037FFF</addressRange>
-                <addressSpan>229376</addressSpan>
-                <attributes>memory</attributes>
-        </MemoryMap>
-        <MemoryMap>
                 <slaveDescriptor>timer_0</slaveDescriptor>
-                <addressRange>0x00041000 - 0x0004103F</addressRange>
+                <addressRange>0x00001000 - 0x0000103F</addressRange>
                 <addressSpan>64</addressSpan>
                 <attributes>timer</attributes>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>fifoed_avalon_uart_5</slaveDescriptor>
-                <addressRange>0x00041040 - 0x0004107F</addressRange>
-                <addressSpan>64</addressSpan>
-                <attributes>printable</attributes>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>fifoed_avalon_uart_4</slaveDescriptor>
-                <addressRange>0x00041080 - 0x000410BF</addressRange>
-                <addressSpan>64</addressSpan>
-                <attributes>printable</attributes>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>fifoed_avalon_uart_3</slaveDescriptor>
-                <addressRange>0x000410C0 - 0x000410FF</addressRange>
-                <addressSpan>64</addressSpan>
-                <attributes>printable</attributes>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>fifoed_avalon_uart_2</slaveDescriptor>
-                <addressRange>0x00041100 - 0x0004113F</addressRange>
-                <addressSpan>64</addressSpan>
-                <attributes>printable</attributes>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>fifoed_avalon_uart_1</slaveDescriptor>
-                <addressRange>0x00041140 - 0x0004117F</addressRange>
-                <addressSpan>64</addressSpan>
-                <attributes>printable</attributes>
-        </MemoryMap>
-        <MemoryMap>
                 <slaveDescriptor>fifoed_avalon_uart_0</slaveDescriptor>
-                <addressRange>0x00041180 - 0x000411BF</addressRange>
+                <addressRange>0x00001040 - 0x0000107F</addressRange>
                 <addressSpan>64</addressSpan>
                 <attributes>printable</attributes>
         </MemoryMap>
         <MemoryMap>
                 <slaveDescriptor>msgdma_0_csr</slaveDescriptor>
-                <addressRange>0x000411C0 - 0x000411DF</addressRange>
+                <addressRange>0x00001080 - 0x0000109F</addressRange>
                 <addressSpan>32</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>fifoed_avalon_uart_5_txenable</slaveDescriptor>
-                <addressRange>0x000411E0 - 0x000411EF</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>fifoed_avalon_uart_4_txenable</slaveDescriptor>
-                <addressRange>0x000411F0 - 0x000411FF</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>fifoed_avalon_uart_3_txenable</slaveDescriptor>
-                <addressRange>0x00041200 - 0x0004120F</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>fifoed_avalon_uart_2_txenable</slaveDescriptor>
-                <addressRange>0x00041210 - 0x0004121F</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>fifoed_avalon_uart_1_txenable</slaveDescriptor>
-                <addressRange>0x00041220 - 0x0004122F</addressRange>
-                <addressSpan>16</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
                 <slaveDescriptor>fifoed_avalon_uart_0_txenable</slaveDescriptor>
-                <addressRange>0x00041230 - 0x0004123F</addressRange>
+                <addressRange>0x000010A0 - 0x000010AF</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>nios_activity_leds</slaveDescriptor>
-                <addressRange>0x00041240 - 0x0004124F</addressRange>
+                <slaveDescriptor>nios_activity_led_0</slaveDescriptor>
+                <addressRange>0x000010B0 - 0x000010BF</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
                 <slaveDescriptor>msgdma_0_descriptor_slave</slaveDescriptor>
-                <addressRange>0x00041250 - 0x0004125F</addressRange>
+                <addressRange>0x000010C0 - 0x000010CF</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>sysid</slaveDescriptor>
-                <addressRange>0x00041260 - 0x00041267</addressRange>
-                <addressSpan>8</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
                 <slaveDescriptor>jtag_uart_0</slaveDescriptor>
-                <addressRange>0x00041268 - 0x0004126F</addressRange>
+                <addressRange>0x000010D0 - 0x000010D7</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes>printable</attributes>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>onchip_memory2_0</slaveDescriptor>
+                <addressRange>0x00020000 - 0x0003FFFF</addressRange>
+                <addressSpan>131072</addressSpan>
+                <attributes>memory</attributes>
         </MemoryMap>
         <LinkerSection>
                 <sectionName>.text</sectionName>

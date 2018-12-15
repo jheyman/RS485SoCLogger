@@ -14,6 +14,7 @@ unsigned long loop_index=0;
 void setup()
 {
   Serial.begin(1000000);
+  //Serial.begin(115200);
   pinMode (ENABLE_PIN, OUTPUT);  // driver output enable
   pinMode (LED_PIN, OUTPUT);  // built-in LED
   pinMode (OUTPUT_PIN, OUTPUT);  // slave trigger output
@@ -32,9 +33,9 @@ void setup()
   sendWrongBuf[30] = 255;
 } 
 
-#define INTERFRAME_DELAY_MICROSECONDS 60
+#define INTERFRAME_DELAY_MICROSECONDS 280
 #define FRAME_SIZE 64
-#define NB_FRAMES_SENT_UPON_TRIGGER 3
+#define NB_FRAMES_SENT_UPON_TRIGGER 10000
 
 unsigned char val=0;
 
@@ -47,7 +48,8 @@ void loop()
     button = digitalRead(BUTTON_PIN);
     trig = digitalRead(TRIG_PIN);
   }
-  while(/*trig != LOW &&*/ button != LOW);
+  while(trig != LOW &&
+  button != LOW);
  
   digitalWrite (OUTPUT_PIN, LOW);  // enable trigger to slave arduino
   digitalWrite (LED_PIN, HIGH);  // flash LED 
@@ -106,7 +108,7 @@ void loop()
      //char val = loop_index%256;
      //loop_index++;
 
-     for(unsigned int i=0; i < FRAME_SIZE+frame;i++)
+     for(unsigned int i=0; i < FRAME_SIZE;i++)
      {
       //Serial.write(i%256);
       Serial.write(val);

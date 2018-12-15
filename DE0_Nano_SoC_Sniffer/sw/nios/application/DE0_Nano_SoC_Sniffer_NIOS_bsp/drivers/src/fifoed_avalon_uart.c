@@ -38,6 +38,7 @@
 
 #include "fifoed_avalon_uart.h"
 #include "fifoed_avalon_uart_regs.h"
+#include "altera_avalon_timer_regs.h"
 
 /*
  * FIFOED_AVALON_UART_READ_RDY and FIFOED_AVALON_UART_WRITE_RDY are the bitmasks 
@@ -224,12 +225,9 @@ int fifoed_avalon_uart_write (fifoed_avalon_uart_state* sp, const char* ptr, int
  * for copying data from the device into this buffer.
  */
 
-
-#include <stdio.h>
-
 int fifoed_avalon_uart_read (fifoed_avalon_uart_state* sp, char* ptr, int len, int flags)
 {
-	//alt_irq_context context;
+	alt_irq_context context;
 
 	if (sp->rx_frame_readindex == sp->rx_frame_writeindex)
 	{
@@ -249,46 +247,6 @@ int fifoed_avalon_uart_read (fifoed_avalon_uart_state* sp, char* ptr, int len, i
 		}
 
 		snap->rx_framestart_index = sp->rx_frame_readindex;
-
-
-		printf("Emptying FIFO: %d frames to read\n",snap->rx_framecount);
-
-		int frame=snap->rx_framestart_index;
-
-
-		int currentFIFOsize = IORD_FIFOED_AVALON_UART_RX_FIFO_USED(sp->base);
-		printf("FIFO size before read: %d\n", currentFIFOsize);
-
-		// Read all frame bytes from UART FIFO
-		for (int i=0; i < snap->rx_framecount; i++)
-		{
-			  // memorize where first byte of this new frame will go in the buffer
-			  sp->rx_framestart_offset[frame] = sp->rx_end;
-
-			  printf("Emptying FIFO: frame %d, reading %d bytes\n",frame, sp->rx_frame_size[frame]);
-
-
-			  printf("frame %d, IRQ timestamp start=%llu\n",frame,sp->rx_timestamp[frame]);
-			  printf("frame %d, IRQ timestamp start=%llu\n",frame, sp->rx_timestamp_DEBUG[frame]);
-
-			  // Read the amount of bytes in this frame from the FIFO
-			  for (int k=0; k<sp->rx_frame_size[frame]; k++)
-			  {
-				  /* Transfer data from the device to the circular buffer */
-				  sp->rx_buf[sp->rx_end] = IORD_FIFOED_AVALON_UART_RXDATA(sp->base);
-
-				  /* Determine which slot to use next in the circular buffer */
-				  sp->rx_end = (sp->rx_end + 1) & FIFOED_AVALON_UART_BUF_MSK;
-			  }
-
-
-			  sp->rx_latestFIFOsize = IORD_FIFOED_AVALON_UART_RX_FIFO_USED(sp->base);
-
-				printf("FIFO size after reading frame %d: %d\n", frame, sp->rx_latestFIFOsize);
-
-
-			  frame = (frame+1) & MAX_NB_FRAMES_BUFFERED_MASK;
-		}
 
 		// move pointers for next read call
 		sp->rx_frame_readindex = sp->rx_frame_writeindex;
@@ -440,23 +398,86 @@ int fifoed_avalon_uart_write (fifoed_avalon_uart_state* sp, const char* ptr, int
  */
 
 static void fifoed_avalon_uart_rxirq (fifoed_avalon_uart_state* sp,
-		alt_u32              status)
+                                   alt_u32              status)
 {
-	// capture current high-resolution timestamp.
-	// this will correspond to the time of end of the received message + idle timeout gap
-	//alt_u32 divisor = alt_timestamp_freq()/1000000;
-	sp->rx_timestamp[sp->rx_frame_writeindex] = alt_timestamp();
 
-	// Figure out how many (unread) bytes have bee received since last frame/IRQ
-	int currentFIFOsize = IORD_FIFOED_AVALON_UART_RX_FIFO_USED(sp->base);
-	sp->rx_frame_size[sp->rx_frame_writeindex] = currentFIFOsize - sp->rx_latestFIFOsize;
-	sp->rx_latestFIFOsize = currentFIFOsize;
+	  alt_u32 tmp = sp->rx_end;
+	  alt_u16 tmp2 = sp->rx_frame_writeindex;
+	  void* base = sp->base;
+	  alt_u16 framesize=0;
 
-	// DEBUG DEBUG
-	//sp->rx_timestamp_DEBUG[sp->rx_frame_writeindex] = alt_timestamp();
+  // capture current high-resolution timestamp.
+  // this will correspond to the time of end of the received message + idle timeout gap
+  //sp->rx_timestamp[sp->rx_frame_writeindex] = alt_timestamp();
+	//sp->rx_timestamp[tmp2] = alt_timestamp();
 
-	// now that his basic info has been captured, move frame index (wrapping as necessary) for next IRQ
-	sp->rx_frame_writeindex = (sp->rx_frame_writeindex+1) & MAX_NB_FRAMES_BUFFERED_MASK;
+
+
+	IOWR_ALTERA_AVALON_TIMER_SNAP_0 (TIMER_0_BASE, 0);
+	alt_timestamp_type snap_0 = IORD_ALTERA_AVALON_TIMER_SNAP_0(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_0_MSK;
+	alt_timestamp_type snap_1 = IORD_ALTERA_AVALON_TIMER_SNAP_1(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_1_MSK;
+	alt_timestamp_type snap_2 = IORD_ALTERA_AVALON_TIMER_SNAP_2(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_2_MSK;
+	alt_timestamp_type snap_3 = IORD_ALTERA_AVALON_TIMER_SNAP_3(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_3_MSK;
+
+	sp->rx_timestamp[tmp2]= (0xFFFFFFFFFFFFFFFFULL - ( (snap_3 << 48) | (snap_2 << 32) | (snap_1 << 16) | (snap_0) ));
+
+
+
+
+  // memorize where first byte of this new frame will go in the buffer
+ // sp->rx_framestart_offset[sp->rx_frame_writeindex] = sp->rx_end;
+	sp->rx_framestart_offset[tmp2] = tmp;
+
+  // reset frame size
+  //sp->rx_frame_size[sp->rx_frame_writeindex] = 0;
+	//sp->rx_frame_size[tmp2] = 0;
+
+
+  // allow to read as many as it can.
+  //while ( IORD_FIFOED_AVALON_UART_STATUS(sp->base) & FIFOED_AVALON_UART_STATUS_RRDY_MSK){
+	while ( IORD_FIFOED_AVALON_UART_STATUS(base) & FIFOED_AVALON_UART_STATUS_RRDY_MSK){
+
+	  /* Transfer data from the device to the circular buffer */
+	  //sp->rx_buf[sp->rx_end] = IORD_FIFOED_AVALON_UART_RXDATA(sp->base);
+	  sp->rx_buf[tmp] = IORD_FIFOED_AVALON_UART_RXDATA(base);
+	  //sp->rx_frame_size[tmp2]++;
+	  framesize++;
+
+	  /* Determine which slot to use next in the circular buffer */
+	  //sp->rx_end = (sp->rx_end + 1) & FIFOED_AVALON_UART_BUF_MSK;
+	  tmp = (tmp + 1) & FIFOED_AVALON_UART_BUF_MSK;
+
+	  /*
+	   * If the circular buffer was full, disable interrupts. Interrupts will be
+	   * re-enabled when data is removed from the buffer.
+	   */
+	  /*
+	  if (sp->rx_end == sp->rx_start)
+	  {
+		  sp->ctrl &= ~FIFOED_AVALON_UART_CONTROL_RRDY_MSK;
+
+		  IOWR_FIFOED_AVALON_UART_CONTROL(sp->base, sp->ctrl);
+	  }
+	  */
+  }
+
+  sp->rx_end = tmp;
+  sp->rx_frame_size[tmp2] = framesize;
+
+  // all pending bytes have been read: this is the end of this frame, move frame index (wrapping as necessary)
+  //sp->rx_frame_writeindex = (sp->rx_frame_writeindex+1) & MAX_NB_FRAMES_BUFFERED_MASK;
+  sp->rx_frame_writeindex = (tmp2+1) & MAX_NB_FRAMES_BUFFERED_MASK;
+
+
+  // DEBUG DEBUG DEBUG
+	IOWR_ALTERA_AVALON_TIMER_SNAP_0 (TIMER_0_BASE, 0);
+	snap_0 = IORD_ALTERA_AVALON_TIMER_SNAP_0(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_0_MSK;
+	snap_1 = IORD_ALTERA_AVALON_TIMER_SNAP_1(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_1_MSK;
+	snap_2 = IORD_ALTERA_AVALON_TIMER_SNAP_2(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_2_MSK;
+	snap_3 = IORD_ALTERA_AVALON_TIMER_SNAP_3(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_3_MSK;
+	sp->rx_DEBUGtimestamp[tmp2]= (0xFFFFFFFFFFFFFFFFULL - ( (snap_3 << 48) | (snap_2 << 32) | (snap_1 << 16) | (snap_0) ));
+  //sp->rx_DEBUGtimestamp[tmp2] = alt_timestamp();
+
 }
 /*
  * fifoed_avalon_uart_txirq() is called by fifoed_avalon_uart_irq() to process a
@@ -613,7 +634,6 @@ void fifoed_avalon_uart_init (fifoed_avalon_uart_state* sp,alt_u32 irq_controlle
   sp->rx_frame_writeindex = 0;
   sp->rx_start = 0;
   sp->rx_end = 0;
-  sp->rx_latestFIFOsize = 0;
 
   /* 
    * Initialise the read and write flags and the semaphores used to 
@@ -749,6 +769,8 @@ int fifoed_avalon_uart_ioctl (fifoed_avalon_uart_state* sp, int req, void* arg)
 #endif /* FIFOED_AVALON_UART_USE_IOCTL */
 
 #endif /* defined ALT_USE_SMALL_DRIVERS || FIFOED_AVALON_UART_SMALL */
+
+
 
 
 

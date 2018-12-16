@@ -3,7 +3,7 @@
 # Machine generated for CPU 'nios2_gen2_1' in SOPC Builder design 'soc_system'
 # SOPC Builder design path: /home/etabli/DE0_Nano_SoC_Sniffer/hw/quartus/soc_system.sopcinfo
 #
-# Generated: Sat Dec 08 19:48:08 CET 2018
+# Generated: Sun Dec 16 13:13:03 CET 2018
 
 # DO NOT MODIFY THIS FILE
 #
@@ -47,4 +47,4 @@
 # by allowing GDB to cache memory contents on the host.
 
 # onchip_memory2_1
-memory 0x20000 0x2c000 cache
+memory 0x40000 0x60000 cache

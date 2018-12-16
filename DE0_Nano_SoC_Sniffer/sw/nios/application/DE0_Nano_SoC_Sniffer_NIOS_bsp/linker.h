@@ -4,7 +4,7 @@
  * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'soc_system'
  * SOPC Builder design path: /home/etabli/DE0_Nano_SoC_Sniffer/hw/quartus/soc_system.sopcinfo
  *
- * Generated: Sat Dec 15 19:47:04 CET 2018
+ * Generated: Sun Dec 16 13:12:24 CET 2018
  */
 
 /*
@@ -65,9 +65,9 @@
  *
  */
 
-#define ONCHIP_MEMORY2_0_REGION_BASE 0x20020
+#define ONCHIP_MEMORY2_0_REGION_BASE 0x20
 #define ONCHIP_MEMORY2_0_REGION_SPAN 131040
-#define RESET_REGION_BASE 0x20000
+#define RESET_REGION_BASE 0x0
 #define RESET_REGION_SPAN 32
 
 

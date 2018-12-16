@@ -127,21 +127,12 @@ int main() {
 	}
 
 	// Just a little LED animation to indicate that NIOS processor is alive and running
-	for(int k=0;k<5;k++)
+	for(int k=0;k<10;k++)
 	{
-		for (int i=0; i<6;i++)
-		{
-			enable_led(true);
-			usleep(25000);
-			enable_led(false);
-		}
-
-		for (int i=4; i>=0;i--)
-		{
-			enable_led(true);
-			usleep(25000);
-			enable_led(false);
-		}
+		enable_led(true);
+		usleep(100000);
+		enable_led(false);
+		usleep(100000);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////

@@ -92,21 +92,36 @@ try:
 	while True:
 		try:
 			data, address = sock.recvfrom(1500)
-			recvList = data.split(':');
-			timestamp = recvList[0]
-			msgIndex = recvList[1]
-			channelIndex = int(recvList[2])
-			frameLength = int(recvList[3])
-			payload_as_charlist = ''.join(recvList[4:])
-			payload= [ord(elem) for elem in payload_as_charlist]
-			cmp_list = payload
 
-			if (doNotCheckMessage):
-				logger.info( '%s:%s:%s:%s:%s' % (timestamp, msgIndex, channel_names[channelIndex], frameLength, ','.join(x.encode('hex') for x in payload_as_charlist)))
-			elif cmp(payload, ExpectedData) == 0:
-				logger.info( '%s:%s:%s:%s:OK' % (timestamp,msgIndex,channel_names[channelIndex], frameLength))
-			else:
-				logger.info( '%s:%s:%s:%s:!!!!!!ERROR!!!!!!:%s' % (timestamp, msgIndex, channel_names[channelIndex],  frameLength, ','.join(x.encode('hex') for x in payload_as_charlist)))
+    		# Format:
+    		#  16 bytes for timestamp
+    		#  4 bytes for ethIndex
+    		#  2 bytes for channel index
+    		#  4 bytes for frameLength
+    		#  N bytes for data
+
+    		# A valid data packet has at least one 26 bytes header + 1 byte of data.
+			while (len(data) > 26):
+				# Read frame header
+				timestamp = data[0:16]
+				msgIndex = data[16:20]
+				channelIndex = int(data[20:22])
+				frameLength = int(data[22:26])
+				# Read payload data for this frame
+				payload_as_charlist = ''.join(data[26:(26+frameLength)])
+				payload= [ord(elem) for elem in payload_as_charlist]
+				cmp_list = payload
+
+				if (doNotCheckMessage):
+					logger.info( '%s:%s:%s:%s:%s' % (timestamp, msgIndex, channel_names[channelIndex], frameLength, ','.join(x.encode('hex') for x in payload_as_charlist)))
+				elif cmp(payload, ExpectedData) == 0:
+					logger.info( '%s:%s:%s:%s:OK' % (timestamp,msgIndex,channel_names[channelIndex], frameLength))
+				else:
+					logger.info( '%s:%s:%s:%s:!!!!!!ERROR!!!!!!:%s' % (timestamp, msgIndex, channel_names[channelIndex],  frameLength, ','.join(x.encode('hex') for x in payload_as_charlist)))
+
+				# Strip the data packet from the frame we just processed, and carry on.
+				data = data[26+frameLength:]
+
 		except KeyboardInterrupt:
 			raise
 		except:

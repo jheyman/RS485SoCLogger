@@ -36,7 +36,7 @@ void setup()
 #define INTERFRAME_DELAY_MICROSECONDS 280
 //#define INTERFRAME_DELAY_MICROSECONDS 500
 #define FRAME_SIZE 64
-#define NB_FRAMES_SENT_UPON_TRIGGER 100
+#define NB_FRAMES_SENT_UPON_TRIGGER 10
 
 unsigned char val=0;
 
@@ -79,7 +79,7 @@ void loop()
 
   digitalWrite (ENABLE_PIN, HIGH);  // enable sending
      
-  for (int frame=0; frame < NB_FRAMES_SENT_UPON_TRIGGER; frame++)
+  for (unsigned long frame=0; frame < NB_FRAMES_SENT_UPON_TRIGGER; frame++)
   {
      /*
      int temp = loop_index%256;

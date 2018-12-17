@@ -299,7 +299,7 @@ unsigned int MaxFrameOffset[6];
 unsigned int topGap[6];
 
 int main() {
-	unsigned int i,j,k;
+	unsigned int i;
 	printf("\e[2J");
     printf("DE0-Nano-SoC Sniffer HPS-side compiled %s %s\n", __DATE__, __TIME__);
 
@@ -317,7 +317,6 @@ int main() {
     // (i.e. disregard frames that may have arrived in the buffer before this program is executed)
 	for (i=0;i<2;i++)
 	{
-
 		UART_RXinfo* info = info_UART[i];
 
 		// Since size of (data frame + timestamp) is not necessarily a divider of the buffer size, compute the number
@@ -378,7 +377,6 @@ int main() {
     unsigned long MsgIndex = 0;
     unsigned int ethBytesPacked = 0;
     unsigned long loopIndex = 0;
-    bool receivedStuff=false;
 
     // Main scanning loop
     while (true) {
@@ -403,7 +401,6 @@ int main() {
         	{
         		//printf("NEW RXLatestReceivedFrameOffset[i] = %d\n",RXLatestReceivedFrameOffset[i]);
 
-        		receivedStuff = true;
         		int nb_Frames_received = RXLatestTransferedFrameOffset[i] < RXLatestReceivedFrameOffset[i] ?
         				(RXLatestReceivedFrameOffset[i] - RXLatestTransferedFrameOffset[i])/ (info->RXFrameSize+info->RXTimeStampSize+info->RXFrameLengthSize):
 						(MaxFrameOffset[i] - RXLatestTransferedFrameOffset[i])/ (info->RXFrameSize+info->RXTimeStampSize+info->RXFrameLengthSize) + RXLatestReceivedFrameOffset[i]/(info->RXFrameSize+info->RXTimeStampSize+info->RXFrameLengthSize);
@@ -430,32 +427,13 @@ int main() {
 
             		unsigned short frameLength = *(unsigned short*)frameLengthAddr;
 
-            		//printf("frameLength = %u\n",frameLength);
-            		if (frameLength != 64)
-            			printf("ERROR (channel %d): frame is %d long?\n",i, frameLength);
+            		// DEBUG DEBUG DEBUG
+            		//if (frameLength != 64)
+            		//	printf("ERROR (channel %d): frame is %d long?\n",i, frameLength);
 
+            		//printf("frameLength = %u\n",frameLength);
             		//printf("RXLatestTransferedFrameOffset[i] = %d\n",RXLatestTransferedFrameOffset[i]);
             		//printf("RXLatestReceivedFrameOffset[i] = %d\n",RXLatestReceivedFrameOffset[i]);
-/*
-        	    	char* addr;
-        	    	addr = frameAddr;
-        	    	for (j=0;j<frameLength/32;j++)
-        	    	{
-        	    		for (k=0;k<32;k++)
-        	    		{
-        	    			printf("%02X ", *addr);
-        	    			addr++;
-        	    		}
-
-        	    		printf("\n");
-        	    	}
-        	    	for (k=0;k<frameLength%32;k++)
-        	    	{
-        	    		printf("%02X ", *addr);
-        	    		addr++;
-        	    	}
-    	    		printf("\n");
-*/
 
             		// Format:
             		// 16 bytes for timestamp
@@ -522,28 +500,13 @@ int main() {
 
         			//printf("(final) flushed buffer, %d bytes\n", ethBytesPacked);
 
-        			MsgIndex++ ;
-        		    if (MsgIndex > 999) MsgIndex = 0;
-
         		    // reset packet buffer management
         		    ethPacketPtr=ethPacketBuffer;
         		    ethBytesPacked = 0;
         		}
         	}
 		}
-/*
-        if (receivedStuff)
-        {
-        	printf("\e[2;0f");
-        	printf("%7s %10s\n", "channel", "nbReceived");
 
-        	for (i=0;i<6;i++)
-        	{
-        		printf("%7d %10u\n", i, RXStat_NbReceivedFrames[i]);
-        	}
-        	receivedStuff = false;
-        }
-*/
     	toggle_fpga_leds();
     	usleep(ALT_MICROSECS_IN_A_SEC/2);
         loopIndex++;

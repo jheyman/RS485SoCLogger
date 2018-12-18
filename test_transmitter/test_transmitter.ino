@@ -13,7 +13,7 @@ unsigned long loop_index=0;
 
 void setup()
 {
-  Serial.begin(1000000);
+  Serial.begin(1000000, SERIAL_8E1);
   //Serial.begin(115200);
   pinMode (ENABLE_PIN, OUTPUT);  // driver output enable
   pinMode (LED_PIN, OUTPUT);  // built-in LED
@@ -33,10 +33,10 @@ void setup()
   sendWrongBuf[30] = 255;
 } 
 
+//#define INTERFRAME_DELAY_MICROSECONDS 280
 #define INTERFRAME_DELAY_MICROSECONDS 280
-//#define INTERFRAME_DELAY_MICROSECONDS 500
-#define FRAME_SIZE 64
-#define NB_FRAMES_SENT_UPON_TRIGGER 10
+#define FRAME_SIZE 68
+#define NB_FRAMES_SENT_UPON_TRIGGER 500
 
 unsigned char val=0;
 

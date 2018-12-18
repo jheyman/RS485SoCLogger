@@ -412,7 +412,7 @@ static void fifoed_avalon_uart_rxirq (fifoed_avalon_uart_state* sp,
 	//sp->rx_timestamp[tmp2] = alt_timestamp();
 
 
-
+/*
 	IOWR_ALTERA_AVALON_TIMER_SNAP_0 (TIMER_0_BASE, 0);
 	alt_timestamp_type snap_0 = IORD_ALTERA_AVALON_TIMER_SNAP_0(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_0_MSK;
 	alt_timestamp_type snap_1 = IORD_ALTERA_AVALON_TIMER_SNAP_1(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_1_MSK;
@@ -420,7 +420,9 @@ static void fifoed_avalon_uart_rxirq (fifoed_avalon_uart_state* sp,
 	alt_timestamp_type snap_3 = IORD_ALTERA_AVALON_TIMER_SNAP_3(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_3_MSK;
 
 	sp->rx_timestamp[tmp2]= (0xFFFFFFFFFFFFFFFFULL - ( (snap_3 << 48) | (snap_2 << 32) | (snap_1 << 16) | (snap_0) ));
-
+*/
+	  // DEBUG DEBUG DEBUG
+	  sp->rx_timestamp[tmp2] = 0;
 
 
 
@@ -470,12 +472,12 @@ static void fifoed_avalon_uart_rxirq (fifoed_avalon_uart_state* sp,
 
 
   // DEBUG DEBUG DEBUG
-	IOWR_ALTERA_AVALON_TIMER_SNAP_0 (TIMER_0_BASE, 0);
-	snap_0 = IORD_ALTERA_AVALON_TIMER_SNAP_0(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_0_MSK;
-	snap_1 = IORD_ALTERA_AVALON_TIMER_SNAP_1(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_1_MSK;
-	snap_2 = IORD_ALTERA_AVALON_TIMER_SNAP_2(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_2_MSK;
-	snap_3 = IORD_ALTERA_AVALON_TIMER_SNAP_3(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_3_MSK;
-	sp->rx_DEBUGtimestamp[tmp2]= (0xFFFFFFFFFFFFFFFFULL - ( (snap_3 << 48) | (snap_2 << 32) | (snap_1 << 16) | (snap_0) ));
+	//IOWR_ALTERA_AVALON_TIMER_SNAP_0 (TIMER_0_BASE, 0);
+	//snap_0 = IORD_ALTERA_AVALON_TIMER_SNAP_0(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_0_MSK;
+	//snap_1 = IORD_ALTERA_AVALON_TIMER_SNAP_1(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_1_MSK;
+	//snap_2 = IORD_ALTERA_AVALON_TIMER_SNAP_2(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_2_MSK;
+	//snap_3 = IORD_ALTERA_AVALON_TIMER_SNAP_3(TIMER_0_BASE) & ALTERA_AVALON_TIMER_SNAP_3_MSK;
+	//sp->rx_DEBUGtimestamp[tmp2]= (0xFFFFFFFFFFFFFFFFULL - ( (snap_3 << 48) | (snap_2 << 32) | (snap_1 << 16) | (snap_0) ));
   //sp->rx_DEBUGtimestamp[tmp2] = alt_timestamp();
 
 }

@@ -2,8 +2,8 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>Dec 17, 2018 11:19:25 AM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1545041965286</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>Dec 17, 2018 9:25:50 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1545078350270</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>/home/etabli/DE0_Nano_SoC_Sniffer/sw/nios/application/DE0_Nano_SoC_Sniffer_NIOS_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>/home/etabli/DE0_Nano_SoC_Sniffer/hw/quartus/soc_system.sopcinfo</SopcDesignFile>

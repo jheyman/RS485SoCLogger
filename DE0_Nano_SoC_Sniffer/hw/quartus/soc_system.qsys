@@ -773,7 +773,7 @@
   <parameter name="fixedBaud" value="true" />
   <parameter name="gap_value" value="3" />
   <parameter name="hw_cts" value="false" />
-  <parameter name="parity" value="NONE" />
+  <parameter name="parity" value="EVEN" />
   <parameter name="rx_IRQ_Threshold" value="1" />
   <parameter name="rx_fifo_LE" value="false" />
   <parameter name="simCharStream" value="" />

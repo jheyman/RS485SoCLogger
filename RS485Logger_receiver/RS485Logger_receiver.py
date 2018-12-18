@@ -89,18 +89,35 @@ logger.info('starting up on %s port %s' % server_address, )
 sock.bind(server_address)
 
 try:
+	oldPktIndex = -1
 	while True:
 		try:
 			data, address = sock.recvfrom(1500)
 
-    		# Format:
-    		#  16 bytes for timestamp
-    		#  4 bytes for ethIndex
-    		#  2 bytes for channel index
-    		#  4 bytes for frameLength
-    		#  N bytes for data
+	    		# Format:
+	    		#  16 bytes for timestamp
+	    		#  4 bytes for ethIndex
+	    		#  2 bytes for channel index
+	    		#  4 bytes for frameLength
+	    		#  N bytes for data
 
-    		# A valid data packet has at least one 26 bytes header + 1 byte of data.
+			# Check received packet index: it should increment by one at each packet received,
+			# else we have lost some packets...
+			#print data[0].encode('hex')
+			pktIndex = ord(data[0])
+			if (oldPktIndex <> -1):
+				if (pktIndex <> ((oldPktIndex+1) % 256)):
+					logger.info("Packet LOST (old=%d, new=%d)" % (oldPktIndex, pktIndex))
+				else:
+					logger.info("Pkt Index=%d" % (pktIndex))
+
+			
+			oldPktIndex = pktIndex
+			
+			# Strip the packet index and proceed	
+			data = data[1:]
+
+	    		# A valid data packet has at least (one 26 bytes header + 1 byte of data) of payload
 			while (len(data) > 26):
 				# Read frame header
 				timestamp = data[0:16]

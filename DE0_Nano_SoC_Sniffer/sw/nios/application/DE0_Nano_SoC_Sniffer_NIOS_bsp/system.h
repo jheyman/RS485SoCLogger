@@ -4,7 +4,7 @@
  * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'soc_system'
  * SOPC Builder design path: /home/etabli/DE0_Nano_SoC_Sniffer/hw/quartus/soc_system.sopcinfo
  *
- * Generated: Sun Dec 16 13:12:24 CET 2018
+ * Generated: Mon Dec 17 21:25:51 CET 2018
  */
 
 /*
@@ -195,7 +195,7 @@
 #define FIFOED_AVALON_UART_0_IRQ 3
 #define FIFOED_AVALON_UART_0_IRQ_INTERRUPT_CONTROLLER_ID 0
 #define FIFOED_AVALON_UART_0_NAME "/dev/fifoed_avalon_uart_0"
-#define FIFOED_AVALON_UART_0_PARITY 'N'
+#define FIFOED_AVALON_UART_0_PARITY 'E'
 #define FIFOED_AVALON_UART_0_PASS_ERROR_BITS 0
 #define FIFOED_AVALON_UART_0_RX_FIFO_LE 0
 #define FIFOED_AVALON_UART_0_RX_FIFO_SIZE 256

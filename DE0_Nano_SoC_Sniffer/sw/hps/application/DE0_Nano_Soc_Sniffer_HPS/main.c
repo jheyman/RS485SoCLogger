@@ -28,6 +28,7 @@
 #define ETH_MAX_PACKET_SIZE 1500
 
 #define ETH_FRAME_INFO_SIZE 26
+#define ETH_PACKET_INDEX_SIZE 1
 // Format:
 // 16 bytes for timestamp
 // 4 bytes for ethIndex
@@ -295,11 +296,12 @@ typedef struct {
 unsigned int RXLatestTransferedFrameOffset[6];
 unsigned int RXLatestReceivedFrameOffset[6];
 unsigned long RXStat_NbReceivedFrames[6];
+unsigned char EthPacketIndex = 0;
 unsigned int MaxFrameOffset[6];
 unsigned int topGap[6];
 
 int main() {
-	unsigned int i;
+	unsigned int i,j,k;
 	printf("\e[2J");
     printf("DE0-Nano-SoC Sniffer HPS-side compiled %s %s\n", __DATE__, __TIME__);
 
@@ -378,6 +380,11 @@ int main() {
     unsigned int ethBytesPacked = 0;
     unsigned long loopIndex = 0;
 
+    // Initialize packet index in buffer
+	*ethPacketPtr= EthPacketIndex;
+	ethPacketPtr++;
+	ethBytesPacked++;
+
     // Main scanning loop
     while (true) {
 
@@ -426,6 +433,29 @@ int main() {
             		//printf("timestamp = %llu\n",*(unsigned long long*)timestampAddr);
 
             		unsigned short frameLength = *(unsigned short*)frameLengthAddr;
+/*
+
+        	    	char* addr;
+        	    	addr = frameAddr;
+        	    	for (j=0;j<frameLength/32;j++)
+        	    	{
+        	    		for (k=0;k<32;k++)
+        	    		{
+        	    			printf("%02X ", *addr);
+        	    			addr++;
+        	    		}
+
+        	    		printf("\n");
+        	    	}
+        	    	for (k=0;k<frameLength%32;k++)
+        	    	{
+        	    		printf("%02X ", *addr);
+        	    		addr++;
+        	    	}
+    	    		printf("\n");
+
+*/
+
 
             		// DEBUG DEBUG DEBUG
             		//if (frameLength != 64)
@@ -442,7 +472,7 @@ int main() {
             		// 4 bytes for frameLength
             		// N bytes for data
 
-            		if (frameLength <= (ETH_MAX_PACKET_SIZE - ethBytesPacked - ETH_FRAME_INFO_SIZE))
+            		if ((int)frameLength <= (int)(ETH_MAX_PACKET_SIZE - ethBytesPacked - ETH_FRAME_INFO_SIZE))
             		{
             			sprintf(ethPacketPtr, "%016lu", *(unsigned long*)timestampAddr);
             			ethPacketPtr+=16;
@@ -471,7 +501,10 @@ int main() {
 
             		    // reset packet buffer management
             		    ethPacketPtr=ethPacketBuffer;
-            		    ethBytesPacked = 0;
+            		    EthPacketIndex++;
+            		    *ethPacketPtr= EthPacketIndex;
+            			ethPacketPtr++;
+            		    ethBytesPacked = 1;
 
             		    // Then start filling the buffer again
             			sprintf(ethPacketPtr, "%016lu", *(unsigned long*)timestampAddr);
@@ -492,6 +525,7 @@ int main() {
         		}
 
         		// All frames have been processed: send the last pending buffer, if any
+
         		if (ethBytesPacked != 0)
         		{
         			if (sendto(fd, ethPacketBuffer, ethBytesPacked, 0, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0){
@@ -502,7 +536,10 @@ int main() {
 
         		    // reset packet buffer management
         		    ethPacketPtr=ethPacketBuffer;
-        		    ethBytesPacked = 0;
+        		    EthPacketIndex++;
+        		    *ethPacketPtr= EthPacketIndex;
+        			ethPacketPtr++;
+        		    ethBytesPacked = 1;
         		}
         	}
 		}
